@@ -11,7 +11,7 @@ The storefront, admin panel and API for Sanskriti Art. It runs on Node with **no
    npm start          # http://localhost:5173 (shop) · http://localhost:5173/admin (admin)
    ```
    - **Catalogue:** the shop starts empty. Add categories and products in Admin → Categories / Products.
-   - **Admin account:** created from `ADMIN_EMAIL`/`ADMIN_PASSWORD` if set, or with `npm run create-admin -- email@example.com "Name"`.
+   - **Admin sign-in:** the owner signs in with `ADMIN_EMAIL` and `ADMIN_PASSWORD` (`.env` locally, Environment Variables on Vercel). To change the password, change `ADMIN_PASSWORD` and restart/redeploy; that signs out existing sessions. Extra admins: `npm run create-admin -- email@example.com "Name"`.
    - **Forgotten password:** `npm run reset-password -- email@example.com`.
    - **Admin shortcut:** ⌘⇧O on macOS, Ctrl+Shift+O on Windows/Linux. It opens `/admin` from the shop; you still have to sign in.
 
@@ -49,7 +49,7 @@ Admin uploads go browser → server → Cloudinary → a `media` row in Supabase
 
 ## Security
 
-- **Sign-in:** passwords are hashed with scrypt. Sessions use a random token, stored hashed, in an HttpOnly, SameSite=Strict cookie (also Secure when `NODE_ENV=production`). Repeated failed sign-ins are throttled.
+- **Sign-in:** the owner's `ADMIN_EMAIL`/`ADMIN_PASSWORD` are checked on the server only (constant-time) and never sent to the browser; their session is an HMAC-signed HttpOnly, SameSite=Strict cookie (Secure when `NODE_ENV=production`) signed with a key derived from server secrets. Extra admins' passwords are hashed with scrypt and their sessions are random tokens stored hashed in Supabase. Repeated failed sign-ins are throttled.
 - **Server-side checks:** every `/admin/*` page and `/api/admin/*` endpoint checks the session on the server. Admin write requests also need a CSRF header and a same-origin request.
 - **Supabase:** every table has Row Level Security with no policies, and the anon/authenticated roles have no grants, so the public key can't read or write anything. Only the server, with the service-role key, reaches the data. That key and the Cloudinary secret never reach a browser.
 - **Content Security Policy:** the admin panel sends a strict Content-Security-Policy.

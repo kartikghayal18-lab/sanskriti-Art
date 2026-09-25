@@ -11,7 +11,7 @@
 import { sb, inList, ilike } from './supabase.js';
 import { config } from './env.js';
 import { json, readJson, readRaw, HttpError, bad, notFound, clientIp } from './http.js';
-import { currentAdmin, createSession, destroySession, verifyPassword, hashPassword, validatePassword, forgetSessions } from './auth.js';
+import { currentAdmin, createSession, createOwnerSession, isOwnerLogin, isOwnerEmail, destroySession, verifyPassword, hashPassword, validatePassword, forgetSessions } from './auth.js';
 import { loadProducts, productById, clearCatalogCache } from './catalog.js';
 import { getSettings, saveSettings, SETTING_DEFAULTS, allContent, saveContent, CONTENT_KEYS, clearStoreCache } from './store.js';
 import { uploadImage, resolveImages, attach, release } from './media.js';
@@ -331,21 +331,35 @@ export function registerAdmin(r) {
     const b = await readJson(req, 4096);
     const email = v.str(b.email, 'Email', { required: true, max: 160 });
     const password = String(b.password || '');
+    // The owner: ADMIN_EMAIL / ADMIN_PASSWORD from the server environment (checked here only).
+    if (isOwnerLogin(email, password)) {
+      loginFailures.delete(ip);
+      return json(res, 200, { ok: true, name: config.adminName }, { 'Set-Cookie': createOwnerSession() });
+    }
+    const fail = () => {
+      loginFailures.set(ip, [...recentFailures(ip), Date.now()]);
+      if (loginFailures.size > 5000) loginFailures.clear();
+      return new HttpError(401, 'That email and password don’t match.');
+    };
+    if (isOwnerEmail(email)) throw fail();   // the owner's password is ADMIN_PASSWORD, never an older copy in the database
+    // Other admins (npm run create-admin): accounts and sessions in Supabase.
     const a = await sb.one('admins', { email: `ilike.${email.replace(/[%_*]/g, '')}` });
     // verify even when the account is missing so timing doesn't reveal which emails exist
     const ok = verifyPassword(password, a?.password_hash || 'scrypt$00$00') && !!a;
-    if (!ok) {
-      loginFailures.set(ip, [...recentFailures(ip), Date.now()]);
-      if (loginFailures.size > 5000) loginFailures.clear();
-      throw new HttpError(401, 'That email and password don’t match.');
-    }
+    if (!ok) throw fail();
     loginFailures.delete(ip);
     json(res, 200, { ok: true, name: a.name }, { 'Set-Cookie': await createSession(a.id) });
   });
   r.post('/api/admin/logout', async (req, res) => json(res, 200, { ok: true }, { 'Set-Cookie': await destroySession(req) }));
-  admin('get', '/api/admin/me', async (req, res, _, who) => json(res, 200, { admin: who, badges: await badges(), store_name: (await getSettings()).store_name }));
+  admin('get', '/api/admin/me', async (req, res, _, who) => {
+    // Who is signed in never depends on the database; the counts do, so they fall back to zero.
+    const [counts, settings] = await Promise.all([badges().catch(() => null), getSettings().catch(() => null)]);
+    json(res, 200, { admin: { id: who.id, email: who.email, name: who.name }, badges: counts || { orders: 0, custom_orders: 0, whatsapp: 0, reviews: 0, inventory: 0 },
+      store_name: settings?.store_name || 'Sanskriti Art', database: !!counts });
+  });
   admin('post', '/api/admin/password', async (req, res, _, who) => {
     const b = await readJson(req, 4096);
+    if (who.owner) throw bad('This account’s password is ADMIN_PASSWORD in the server settings (.env locally, Environment Variables on Vercel). Change it there.');
     const a = await sb.one('admins', { id: `eq.${who.id}` });
     if (!String(b.current || '')) throw bad('Enter your current password.');
     if (!verifyPassword(String(b.current), a.password_hash)) throw bad('Your current password is not correct.');
@@ -357,6 +371,7 @@ export function registerAdmin(r) {
   });
   admin('put', '/api/admin/profile', async (req, res, _, who) => {
     const b = await readJson(req, 4096);
+    if (!who.id) throw new HttpError(503, 'Your profile can’t be saved until the database is set up.');
     await sb.update('admins', { id: `eq.${who.id}` }, { name: v.str(b.name, 'Name', { required: true, max: 60 }) });
     forgetSessions(who.id);
     json(res, 200, { ok: true });
