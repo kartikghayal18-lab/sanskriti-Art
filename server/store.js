@@ -4,7 +4,7 @@
  * stored here; they stay in environment variables.
  */
 import { sb } from './supabase.js';
-import { config } from './env.js';
+import { config, normalizeWhatsApp } from './env.js';
 
 const lines = (...l) => l.join('\n');
 export const SETTING_DEFAULTS = {
@@ -15,7 +15,7 @@ export const SETTING_DEFAULTS = {
   shipping_flat: '0', free_shipping_above: '0', delivery_time: '', ship_regions: 'All India', cod: '0',
   notify_new_order: '1', notify_low_stock: '1', notify_reviews: '1', notify_daily_summary: '0', notify_email: '',
   appearance_density: 'comfortable', appearance_sidebar_art: '1', appearance_reduce_motion: '0',
-  whatsapp_template: lines('Hi {{STORE_NAME}}, I have placed an order.', '', 'Order ID: {{ORDER_ID}}', 'Name: {{FULL_NAME}}',
+  whatsapp_template: lines('Hi {{STORE_NAME}}, I have placed an order.', '', 'Order ID: {{ORDER_ID}}', 'Name: {{FULL_NAME}}', 'Phone: {{PHONE}}',
     'Product: {{PRODUCT_NAME}}', 'Quantity: {{QUANTITY}}', 'Total: ₹{{TOTAL}}', '', '{{CUSTOMIZATION}}', '', 'I would like to confirm my order and payment.'),
   whatsapp_custom_template: lines('Hi {{CUSTOMER_NAME}} 🌸', '', 'Thank you for your order {{ORDER_ID}} with {{STORE_NAME}}!', '',
     'To start your {{PRODUCT}}, please share:', '• 1–3 clear photos', '• Any names, dates or colours you’d like', '',
@@ -36,12 +36,18 @@ export async function getSettings() {
   const out = { ...SETTING_DEFAULTS };
   for (const { key, value } of await sb.select('settings', { select: 'key,value' })) out[key] = value;
   // The business number comes from WHATSAPP_BUSINESS_NUMBER unless the owner set one in Admin → WhatsApp.
-  if (!out.whatsapp_number) out.whatsapp_number = config.whatsappNumber;
+  out.whatsapp_number = normalizeWhatsApp(out.whatsapp_number) || config.whatsappNumber;
   settingsCache = { value: out, until: Date.now() + TTL };
   return { ...out };
 }
 export async function publicSettings() {
-  const s = await getSettings();
+  let s;
+  try { s = await getSettings(); }
+  catch (err) {
+    // The database is unreachable: the shop still gets its name and the WhatsApp number from .env.
+    console.error(`[store] settings unavailable, using defaults: ${err.message}`);
+    s = { ...SETTING_DEFAULTS, whatsapp_number: config.whatsappNumber };
+  }
   return Object.fromEntries(PUBLIC_SETTINGS.map((k) => [k, s[k]]));
 }
 export async function saveSettings(values) {

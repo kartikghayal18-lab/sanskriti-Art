@@ -190,7 +190,7 @@ export function Modal({ title, body, submit = 'Save', cancel = 'Cancel', onSubmi
 /* ---------- Image uploader ----------
    ImageUploader(container, { images: [{url, alt}], max, single, upload(file, onProgress) → {url}, onChange(images) })
    Upload area (click or drop), previews, primary image, reorder, alt text, delete. */
-export function ImageUploader(container, { images = [], max = 12, single = false, primary = !single, upload, onChange = () => {}, altText = true, hint = 'JPG, PNG, WebP or GIF · up to 5 MB' }) {
+export function ImageUploader(container, { images = [], max = 12, single = false, primary = !single, upload, onChange = () => {}, altText = true, hint = 'JPG, PNG, WebP or GIF · up to 4 MB' }) {
   let list = images.map((i) => ({ ...i }));
   const emit = () => onChange(list.filter((i) => !i.uploading).map(({ url, alt }) => ({ url, alt })));
   const render = () => {
@@ -214,7 +214,7 @@ export function ImageUploader(container, { images = [], max = 12, single = false
   const add = async (files) => {
     for (const file of [...files].slice(0, (single ? 1 : max) - list.length)) {
       if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) { toast(`${file.name}: please choose a JPG, PNG, WebP or GIF image.`, 'error'); continue; }
-      if (file.size > 5 * 1024 * 1024) { toast(`${file.name} is larger than 5 MB.`, 'error'); continue; }
+      if (file.size > 4 * 1024 * 1024) { toast(`${file.name} is larger than 4 MB.`, 'error'); continue; }
       const entry = { url: '', alt: '', preview: URL.createObjectURL(file), uploading: true };
       if (single) list = [];
       list.push(entry); render();

@@ -493,3 +493,6 @@ html:has(.cart[open]) { overflow: hidden; }
 
 /* Checkout: city / state / pincode on one row where there's room */
 .checkout__row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+
+/* Checkout confirmation: parts that don't apply (no order number / no WhatsApp link) are hidden */
+.cart__done [hidden] { display: none; }

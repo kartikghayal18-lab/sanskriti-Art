@@ -39,7 +39,7 @@ export async function api(method, path, body, { raw } = {}) {
  */
 export const uploadImage = (file, kind = 'product', onProgress = null) => new Promise((resolve, reject) => {
   if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) return reject(new Error(`${file.name}: please choose a JPG, PNG, WebP or GIF image.`));
-  if (file.size > 5 * 1024 * 1024) return reject(new Error(`${file.name} is larger than 5 MB.`));
+  if (file.size > 4 * 1024 * 1024) return reject(new Error(`${file.name} is larger than 4 MB. Please use a smaller image.`));
   const xhr = new XMLHttpRequest();
   xhr.open('POST', `/api/admin/uploads?kind=${encodeURIComponent(kind)}`);
   xhr.setRequestHeader('X-Requested-With', 'sanskriti-admin');

@@ -21,7 +21,7 @@ window.SACart = (() => {
   let items = [];
   try { items = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { items = []; }
   if (!Array.isArray(items)) items = [];
-  items = items.filter((it) => it && Number.isInteger(it.productId) && it.qty > 0);
+  items = items.filter((it) => it && (Number.isInteger(it.productId) || typeof it.slug === 'string') && it.qty > 0);
   const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(items)); } catch { /* storage unavailable */ } };
   const count = () => items.reduce((n, it) => n + it.qty, 0);
   const total = () => items.reduce((n, it) => n + it.qty * it.price, 0);
@@ -43,7 +43,7 @@ window.SACart = (() => {
     list: $('[data-cart-items]'), empty: $('[data-cart-empty]'), foot: $('[data-cart-foot]'), total: $('[data-cart-total]'),
     checkoutBtn: $('[data-cart-checkout]'), placeBtn: $('[data-cart-place]'), placeLabel: $('[data-place-label]'),
     form: $('[data-checkout]'), error: $('[data-checkout-error]'),
-    done: $('[data-cart-done]'), doneNumber: $('[data-done-number]'), doneWa: $('[data-done-wa]'),
+    done: $('[data-cart-done]'), doneNumber: $('[data-done-number]'), doneWa: $('[data-done-wa]'), doneNote: $('[data-done-note]'),
   };
   const badges = document.querySelectorAll('[data-cart-count]');   // header + mobile bottom nav
   const cartLinks = document.querySelectorAll('[data-cart]');
@@ -119,7 +119,7 @@ window.SACart = (() => {
 
   /** Add a configured product. Lines with the same product, variant and customisation merge. */
   const add = (item) => {
-    const key = JSON.stringify([item.productId, item.variantId, item.initial || '', item.notes || '']);
+    const key = JSON.stringify([item.productId ?? item.slug, item.variantId, item.initial || '', item.notes || '']);
     const line = items.find((it) => it.key === key);
     if (line) { line.stock = item.stock; line.qty = Math.min(lineMax(line), line.qty + item.qty); }
     else items.push({ ...item, key, qty: Math.min(lineMax(item), item.qty) });
@@ -130,50 +130,98 @@ window.SACart = (() => {
   };
 
   /* ---------- Place order ---------- */
+  // Phones hand wa.me links to the WhatsApp app; desktops open WhatsApp Web in a new tab.
+  const isPhone = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+
+  /** Order details for WhatsApp, built from the cart when the server couldn't save the order. */
+  const fallbackMessage = (c) => {
+    const lines = items.map((it) => `${it.name}${it.variantName ? ` (${it.variantName})` : ''} × ${it.qty}`);
+    const custom = items.map((it) => describe(it) && `${items.length > 1 ? `${it.name}: ` : ''}${describe(it)}`).filter(Boolean);
+    return [
+      `Hi ${(CONFIG.store_name || 'Sanskriti Art')}, I would like to place an order.`, '',
+      `Name: ${c.name}`, `Phone: ${c.phone}`,
+      `Product: ${lines.join(', ')}`, `Quantity: ${count()}`, `Total: ${inr(total())}`,
+      ...(c.address ? [`Address: ${[c.address, c.city, c.state, c.pincode].filter(Boolean).join(', ')}`] : []),
+      ...(custom.length ? ['', `Customization: ${custom.join('\n')}`, 'I will send my customization photos/details here.'] : []),
+      ...(c.note ? ['', `Note: ${c.note}`] : []),
+      '', 'I would like to confirm my order and payment.',
+      '(The website couldn’t save this order online, so I’m sending the details here.)',
+    ].join('\n');
+  };
+
+  /** Opens WhatsApp. `tab` is a window opened during the click (desktop), so popup blockers allow it. */
+  const openWhatsApp = (url, tab) => {
+    if (tab && !tab.closed) { tab.location.href = url; return; }
+    window.location.href = url;   // phones: hands over to the WhatsApp app; also the fallback if a popup was blocked
+  };
+
   const placeOrder = async () => {
     const f = ui.form;
     ui.error.hidden = true;
     const phoneDigits = f.elements.phone.value.replace(/\D/g, '');
     f.elements.phone.setCustomValidity(phoneDigits.length >= 10 && phoneDigits.length <= 15 ? '' : 'Please enter a valid phone number with at least 10 digits.');
     if (!f.reportValidity()) return;
+    const c = Object.fromEntries(['name', 'phone', 'email', 'address', 'city', 'state', 'pincode', 'note'].map((k) => [k, f.elements[k].value.trim()]));
 
-    // Open the WhatsApp tab now, while we still have the click, so popup blockers allow it.
-    const tab = window.open('', '_blank');
-    if (tab) tab.opener = null;
+    // Desktop: open the tab now, while we still have the user's click. Phones navigate after saving instead.
+    const tab = isPhone ? null : window.open('about:blank', '_blank');
+    const fail = (message) => {
+      tab?.close();
+      ui.error.textContent = message;
+      ui.error.hidden = false;
+      ui.error.scrollIntoView({ block: 'nearest' });
+    };
     ui.placeBtn.disabled = true;
     ui.placeLabel.textContent = 'Placing your order…';
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer: {
-            name: f.elements.name.value, phone: f.elements.phone.value, email: f.elements.email.value,
-            address: f.elements.address.value, city: f.elements.city.value, state: f.elements.state.value,
-            pincode: f.elements.pincode.value, note: f.elements.note.value,
-          },
-          items: items.map((it) => ({
-            productId: it.productId, variantId: it.variantId, quantity: it.qty,
-            customization: { initial: it.initial, text: it.notes },
-          })),
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'We couldn’t place your order. Please try again.');
+      let res = null, data = {};
+      try {
+        res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer: c,
+            items: items.map((it) => ({
+              productId: it.productId ?? null, slug: it.slug, variantId: it.variantId, quantity: it.qty,
+              customization: { initial: it.initial, text: it.notes },
+            })),
+          }),
+        });
+        data = await res.json().catch(() => ({}));
+      } catch { res = null; }   // offline / server unreachable
 
-      items = []; save();
-      ui.doneNumber.textContent = data.number;
-      ui.doneWa.href = data.whatsappUrl;
-      if (tab) tab.location.href = data.whatsappUrl;
-      else window.location.assign(data.whatsappUrl);
-      f.reset();
+      // The order couldn't be checked or saved (a problem with the cart or details): show why and stop.
+      if (res && !res.ok && res.status < 500 && res.status !== 404 && res.status !== 405) {
+        fail(data.error || 'We couldn’t place your order. Please check your details and try again.');
+        return;
+      }
+
+      let url, number = '';
+      if (res && res.ok) {
+        // Saved in Supabase. The server builds the order-specific message (order ID, items, total, customisation).
+        number = data.number;
+        url = data.whatsappUrl || null;
+      } else {
+        // The server couldn't save it right now: still get the customer to us on WhatsApp with their details.
+        await SAWhatsApp.ready;
+        url = SAWhatsApp.link(fallbackMessage(c));
+      }
+      if (!url) {
+        if (!number) { fail(SAWhatsApp.MISSING); return; }
+        tab?.close();
+      }
+
+      if (number) { items = []; save(); f.reset(); }
+      ui.doneNumber.textContent = number || '';
+      ui.doneNumber.closest('p').hidden = !number;
+      ui.doneWa.href = url || '#';
+      ui.doneWa.hidden = !url;
+      ui.doneNote.textContent = !url ? `Your order ${number} is saved, but WhatsApp isn’t set up for this shop yet. We’ll contact you on ${c.phone}.`
+        : number ? 'WhatsApp should now be open with your order details. Just press send, and our team will reply to confirm your design, payment and delivery.'
+          : 'We couldn’t save your order on the website just now, so WhatsApp has opened with your order details instead. Press send and our team will confirm everything with you there.';
       go('done');
-      if (announce) announce.textContent = `Order ${data.number} placed. WhatsApp is opening.`;
-    } catch (err) {
-      tab?.close();
-      ui.error.textContent = err.message;
-      ui.error.hidden = false;
-      ui.error.scrollIntoView({ block: 'nearest' });
+      if (announce) announce.textContent = number ? `Order ${number} placed.${url ? ' WhatsApp is opening.' : ''}` : 'WhatsApp is opening with your order details.';
+      if (url) openWhatsApp(url, tab);
     } finally {
       ui.placeBtn.disabled = false;
       ui.placeLabel.textContent = 'Place Order on WhatsApp';

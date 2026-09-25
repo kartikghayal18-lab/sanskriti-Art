@@ -7,6 +7,7 @@
   "engines": { "node": ">=22.13" },
   "scripts": {
     "start": "node --no-warnings=ExperimentalWarning server/server.js",
+    "build": "node scripts/build-static.mjs",
     "dev": "node --no-warnings=ExperimentalWarning --watch-path=server server/server.js",
     "create-admin": "node --no-warnings=ExperimentalWarning server/cli.js create-admin",
     "reset-password": "node --no-warnings=ExperimentalWarning server/cli.js reset-password"

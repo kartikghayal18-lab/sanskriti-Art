@@ -14,8 +14,9 @@
  *    never change historical orders.
  */
 import { sb } from './supabase.js';
+import { normalizeWhatsApp } from './env.js';
 import { getSettings } from './store.js';
-import { bad } from './http.js';
+import { bad, HttpError } from './http.js';
 import * as v from './validate.js';
 
 export const ORDER_STATUSES = [
@@ -74,8 +75,12 @@ export async function createOrder(body, { source = 'website', adminId = null } =
   customer.phone_key = phoneKey(customer.phone);
   if (!Array.isArray(body.items) || !body.items.length) throw bad(source === 'admin' ? 'Add at least one product.' : 'Your cart is empty.');
   if (body.items.length > 20) throw bad('Too many items in one order.');
+  // Carts identify products by id; a cart built from the shop's built-in page (no ids) sends the slug instead.
+  const slugs = body.items.filter((raw) => !raw?.productId && raw?.slug).map((raw) => v.slugify(v.str(raw.slug, 'Product', { max: 100 })));
+  const idBySlug = new Map(slugs.length ? (await sb.select('products', { select: 'id,slug', slug: `in.(${slugs.join(',')})` })).map((p) => [p.slug, p.id]) : []);
   const items = body.items.map((raw, i) => ({
-    product_id: v.int(raw?.productId, `Item ${i + 1}`, { min: 1 }),
+    product_id: raw?.productId ? v.int(raw.productId, `Item ${i + 1}`, { min: 1 })
+      : idBySlug.get(v.slugify(String(raw?.slug || ''))) ?? (() => { throw new HttpError(409, 'One of the products in your cart is no longer available.'); })(),
     variant_id: raw?.variantId ? v.int(raw.variantId, 'Option', { min: 1 }) : null,
     quantity: v.int(raw?.quantity, 'Quantity', { min: 1, max: 99 }),
     initial: v.str(raw?.customization?.initial, 'Initial', { max: 1 }),
@@ -92,13 +97,15 @@ export async function createOrder(body, { source = 'website', adminId = null } =
    WhatsApp: links open a chat with a prefilled message (wa.me works on phones and
    desktops). Nothing is sent automatically, and the site never receives replies.
    ====================================================================== */
+/** https://wa.me/<number>?text=<encoded message>, or null when the number isn't a valid WhatsApp number. */
 export function waLink(number, text) {
-  const n = String(number || '').replace(/\D/g, '');
+  const n = normalizeWhatsApp(number);
+  if (!n) return null;
   return `https://wa.me/${n}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
 }
 const PHOTO_NOTE = 'Photo/details to be shared on WhatsApp';
 /**
- * Placeholders: {{STORE_NAME}} {{ORDER_ID}} {{CUSTOMER_NAME}} (first name) {{FULL_NAME}}
+ * Placeholders: {{STORE_NAME}} {{ORDER_ID}} {{CUSTOMER_NAME}} (first name) {{FULL_NAME}} {{PHONE}}
  * {{PRODUCT_NAME}} {{QUANTITY}} {{TOTAL}} {{ITEMS}} (one block per product) {{PRODUCT}}
  * (first product) and {{CUSTOMIZATION}}: for personalised orders, their requirements plus
  * "I will send my customization photos/details here."; empty otherwise.
@@ -123,6 +130,7 @@ export function fillTemplate(tpl, order, settings) {
     .replaceAll('{{TOTAL}}', Number(order.total).toLocaleString('en-IN'))
     .replaceAll('{{CUSTOMIZATION}}', customBlock)
     .replaceAll('{{FULL_NAME}}', String(order.customer_name || ''))
+    .replaceAll('{{PHONE}}', String(order.phone || ''))
     .replaceAll('{{CUSTOMER_NAME}}', String(order.customer_name || '').split(' ')[0])
     .replaceAll('{{PRODUCT_NAME}}', single ? `${items[0].product_name}${variant(items[0])}` : items.map((it) => `${it.product_name}${variant(it)} × ${it.quantity}`).join(', ') || 'piece')
     .replaceAll('{{QUANTITY}}', String(items.reduce((n, it) => n + Number(it.quantity || 0), 0)))
@@ -135,9 +143,8 @@ export const whatsappMessage = (order, settings) => fillTemplate(settings.whatsa
 /** Link for the admin to open a chat with the customer (manual conversation). */
 export function customerChatLink(o, settings, text) {
   const first = String(o.customer_name || '').split(' ')[0];
-  const phone = String(o.phone || '').replace(/\D/g, '');
   const msg = text ?? (o.number ? `Hi ${first}, this is ${settings.store_name || 'Sanskriti Art'} about your order ${o.number}.` : `Hi ${first}, this is ${settings.store_name || 'Sanskriti Art'}.`);
-  return waLink(phone.length === 10 ? `91${phone}` : phone, msg);
+  return waLink(o.phone, msg) || '#';
 }
 
 /* ======================================================================

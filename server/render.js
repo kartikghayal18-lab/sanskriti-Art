@@ -6,7 +6,7 @@
  */
 import { readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
-import { ROOT } from './env.js';
+import { ROOT, normalizeWhatsApp } from './env.js';
 import { storefrontCatalog } from './catalog.js';
 import { allContent, publicSettings } from './store.js';
 
@@ -78,13 +78,13 @@ function heroHtml(c) {
 }
 
 function footerWa(s) {
-  const n = String(s.whatsapp_number || '').replace(/\D/g, '');
+  const n = normalizeWhatsApp(s.whatsapp_number);
   const social = [
     s.instagram && `<a class="site-footer__social" href="${h(s.instagram)}" target="_blank" rel="noopener">Instagram</a>`,
     s.facebook && `<a class="site-footer__social" href="${h(s.facebook)}" target="_blank" rel="noopener">Facebook</a>`,
     s.email && `<a class="site-footer__social" href="mailto:${h(s.email)}">${h(s.email)}</a>`,
   ].filter(Boolean).join('');
-  return `<a class="site-footer__wa" href="https://wa.me/${n}" data-whatsapp-contact target="_blank" rel="noopener">
+  return `<a class="site-footer__wa" href="${n ? `https://wa.me/${n}` : '#'}" data-whatsapp-contact target="_blank" rel="noopener">
           ${WA}
           Chat with us on WhatsApp
         </a>${social ? `<div class="site-footer__socials">${social}</div>` : ''}`;
@@ -102,13 +102,16 @@ const region = (html, name, inner) => html.replace(
   new RegExp(`<!-- sa:${name} -->[\\s\\S]*?<!-- /sa:${name} -->`), () => `<!-- sa:${name} -->${inner}<!-- /sa:${name} -->`);
 
 export async function renderStorefront() {
-  const [settings, content, catalog] = await Promise.all([publicSettings(), allContent(), storefrontCatalog()]);
+  const settings = await publicSettings();   // never throws: falls back to .env when the database is down
+  let content = null, catalog = null;
+  try { [content, catalog] = await Promise.all([allContent(), storefrontCatalog()]); }
+  catch (err) { console.error(`[render] catalogue unavailable, serving the built-in page: ${err.message}`); }
   let html = template();
-  html = region(html, 'public', `<script>window.SA_PUBLIC = ${safeJson(settings)};</script>
-  <script type="application/json" id="sa-catalog">${safeJson(catalog)}</script>`);
-  html = region(html, 'hero', heroHtml(content.hero));
-  html = region(html, 'catalog', catalogHtml(catalog));
-  html = region(html, 'footer-tag', `<p class="site-footer__tag">${h(content.contact.tagline)}</p>`);
+  html = region(html, 'public', `<script>window.SA_PUBLIC = ${safeJson(settings)};</script>${catalog ? `
+  <script type="application/json" id="sa-catalog">${safeJson(catalog)}</script>` : ''}`);
+  if (content) html = region(html, 'hero', heroHtml(content.hero));
+  if (catalog) html = region(html, 'catalog', catalogHtml(catalog));
+  if (content) html = region(html, 'footer-tag', `<p class="site-footer__tag">${h(content.contact.tagline)}</p>`);
   html = region(html, 'footer-wa', footerWa(settings));
   if (settings.store_name) html = html.replace(/<title>[^<]*<\/title>/, `<title>${h(settings.store_name)} — Handmade Resin Art &amp; Preserved Memories</title>`);
   return html;

@@ -482,8 +482,6 @@ th button.sort { background: none; border: 0; padding: 0; color: inherit; font-w
 /* =========================================================
    Phase 1 components
    ========================================================= */
-.demo-pill { margin-left: auto; padding: 4px 10px; border-radius: 999px; background: #f6ead7; color: var(--bronze); font-size: 12px; font-weight: 500; white-space: nowrap; border: 1px dashed rgba(149, 96, 44, .45); }
-.demo-pill:not([hidden]) ~ .bell { margin-left: 0; }
 .notice { display: flex; align-items: flex-start; gap: 8px; margin: -8px 0 18px; padding: 10px 14px; border-radius: 12px; background: #f6ead7; color: #6d4a1c; font-size: 13.5px; }
 .notice svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
 .inline-icon { display: inline-block; width: 15px; height: 15px; vertical-align: -2px; color: var(--ink-soft); }
@@ -782,8 +780,7 @@ body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after 
 }
 @media (max-width: 700px) {
   .hide-sm { display: none; }
-  .demo-pill { display: none; }
-  .searchbar { max-width: none; flex-basis: 100%; }
+    .searchbar { max-width: none; flex-basis: 100%; }
   .select-filter { flex: 1 1 140px; }
   .select-filter .input { width: 100%; min-width: 0; }
   .section-nav { top: 60px; }

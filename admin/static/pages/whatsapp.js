@@ -5,12 +5,13 @@ const TEMPLATES = [
   ['whatsapp_custom_template', 'Customization message', 'What you send to ask for photos and details.'],
   ['whatsapp_confirm_template', 'Order confirmation', 'What you send once the payment is confirmed.'],
 ];
-const PLACEHOLDERS = ['{{ORDER_ID}}', '{{FULL_NAME}}', '{{CUSTOMER_NAME}}', '{{PRODUCT_NAME}}', '{{QUANTITY}}', '{{TOTAL}}', '{{CUSTOMIZATION}}', '{{ITEMS}}', '{{PRODUCT}}', '{{STORE_NAME}}'];
+const PLACEHOLDERS = ['{{ORDER_ID}}', '{{FULL_NAME}}', '{{PHONE}}', '{{CUSTOMER_NAME}}', '{{PRODUCT_NAME}}', '{{QUANTITY}}', '{{TOTAL}}', '{{CUSTOMIZATION}}', '{{ITEMS}}', '{{PRODUCT}}', '{{STORE_NAME}}'];
+// Preview only: placeholder values show where each order detail goes (not a real order).
 const SAMPLE = {
-  '{{CUSTOMER_NAME}}': 'Priya', '{{FULL_NAME}}': 'Priya Sharma', '{{ORDER_ID}}': 'SA-1024', '{{PRODUCT}}': 'Custom Photo Heart',
-  '{{PRODUCT_NAME}}': 'Custom Photo Heart', '{{QUANTITY}}': '1', '{{TOTAL}}': '1,299',
-  '{{ITEMS}}': 'Product:\nCustom Photo Heart\nQuantity:\n1',
-  '{{CUSTOMIZATION}}': 'Customization: Names: Aarav & Diya\nI will send my customization photos/details here.',
+  '{{CUSTOMER_NAME}}': 'Customer', '{{FULL_NAME}}': 'Customer Name', '{{PHONE}}': '+91 00000 00000', '{{ORDER_ID}}': 'SA-0000',
+  '{{PRODUCT}}': 'Product name', '{{PRODUCT_NAME}}': 'Product name', '{{QUANTITY}}': '1', '{{TOTAL}}': '0',
+  '{{ITEMS}}': 'Product:\nProduct name\nQuantity:\n1',
+  '{{CUSTOMIZATION}}': 'Customization: Customization details\nI will send my customization photos/details here.',
 };
 
 export default async function whatsapp({ view }) {
@@ -58,7 +59,7 @@ export default async function whatsapp({ view }) {
             <div class="wa-phone__bar">${Avatar(s.store_name, 30)}<span><strong>${esc(s.store_name)}</strong><small>+${esc(s.whatsapp_number || '—')}</small></span></div>
             <div class="wa-phone__chat"><pre class="wa-bubble wa-bubble--out" data-preview></pre></div>
           </div>
-          <p class="hint" style="margin:10px 0 0">Preview uses a sample order (SA-1024, Priya).</p>
+          <p class="hint" style="margin:10px 0 0">Preview with placeholder values; each order fills in its own details.</p>
         </section>
         <section class="card">
           <div class="card__head"><h2 class="section-title" style="margin:0">Waiting for you</h2><span class="count">${d.waiting.length}</span></div>
@@ -104,7 +105,7 @@ export default async function whatsapp({ view }) {
       const n = view.querySelector('#w-num').value.replace(/\D/g, '');
       if (n.length < 10) { toast('Enter a valid WhatsApp number first.', 'error'); return; }
       window.open(`https://wa.me/${n}?text=${encodeURIComponent(fill(drafts.whatsapp_template))}`, '_blank', 'noopener');
-      toast(`Opened WhatsApp with a sample order message to +${n}.`);
+      toast(`Opened WhatsApp with a preview of the order message to +${n}.`);
     }
   });
   tplForm.addEventListener('submit', async (e) => {

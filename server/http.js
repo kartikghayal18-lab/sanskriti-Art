@@ -131,4 +131,6 @@ export function rateLimiter(max, windowMs) {
     return list.length <= max;
   };
 }
-export const clientIp = (req) => req.socket.remoteAddress || 'unknown';
+/** The visitor's IP. Behind Vercel's proxy the socket is the proxy, so use its forwarded header there. */
+export const clientIp = (req) => (process.env.VERCEL && String(req.headers['x-forwarded-for'] || '').split(',')[0].trim())
+  || req.socket?.remoteAddress || 'unknown';

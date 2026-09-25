@@ -10,7 +10,7 @@ The storefront, admin panel and API for Sanskriti Art. It runs on Node with **no
    ```sh
    npm start          # http://localhost:5173 (shop) · http://localhost:5173/admin (admin)
    ```
-   - **First start:** imports the existing catalogue (6 categories, 18 products, 10 in stock each) into Supabase.
+   - **Catalogue:** the shop starts empty. Add categories and products in Admin → Categories / Products.
    - **Admin account:** created from `ADMIN_EMAIL`/`ADMIN_PASSWORD` if set, or with `npm run create-admin -- email@example.com "Name"`.
    - **Forgotten password:** `npm run reset-password -- email@example.com`.
    - **Admin shortcut:** ⌘⇧O on macOS, Ctrl+Shift+O on Windows/Linux. It opens `/admin` from the shop; you still have to sign in.

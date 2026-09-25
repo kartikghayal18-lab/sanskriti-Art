@@ -36,32 +36,17 @@
   const inr = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
 
   /* ---------- Catalogue ----------
-     Served by the server as JSON (#sa-catalog, from the database). If the page is
-     opened as a plain static file, fall back to reading the home cards. */
+     Served by the server as JSON (#sa-catalog, from the database). With no products
+     (or no database) the shop shows its empty state. */
   const smallCat = (url) => (/^\/?assets\/images\/categories\/[\w-]+\.webp$/.test(url) ? url.replace(/\.webp$/, '-sm.webp') : url);
   const catalogue = (() => {
-    const el = document.getElementById('sa-catalog');
-    if (el) {
-      try {
-        return JSON.parse(el.textContent).map((c) => ({
-          slug: c.slug, name: c.name, desc: c.description, alt: c.image_alt || c.name,
-          image: c.image_url, imageSm: smallCat(c.image_url),
-          products: c.products,
-        }));
-      } catch { /* fall through */ }
-    }
-    return [...document.querySelectorAll('.cat-card')].map((card) => {
-      const slug = card.dataset.category;
-      return {
-        slug, name: card.dataset.name, desc: card.dataset.desc, alt: card.dataset.alt,
-        image: `assets/images/categories/${slug}.webp`, imageSm: `assets/images/categories/${slug}-sm.webp`,
-        products: [...card.querySelectorAll('[data-product]')].map((b) => ({
-          slug: b.dataset.product, name: b.dataset.name, price: Number(b.dataset.price), short_description: b.dataset.desc,
-          image: `assets/images/products/${b.dataset.product}.webp`, images: [], variants: [], details: {}, stock: 99,
-          custom: 'initial' in b.dataset ? { type: 'initial' } : 'photo' in b.dataset ? { type: 'photo', whatsapp: true } : { type: 'text' },
-        })),
-      };
-    });
+    try {
+      return JSON.parse(document.getElementById('sa-catalog')?.textContent || '[]').map((c) => ({
+        slug: c.slug, name: c.name, desc: c.description, alt: c.image_alt || c.name,
+        image: c.image_url, imageSm: smallCat(c.image_url),
+        products: c.products,
+      }));
+    } catch { return []; }
   })();
   const priceLabel = (p) => (p.variants?.length ? `From ${inr.format(Math.min(...p.variants.map((x) => x.price)))}` : inr.format(p.price));
   const bySlug = new Map(catalogue.map((c) => [c.slug, c]));
@@ -245,8 +230,25 @@
     pending = null;
   };
 
+  /* "Create Custom Order": custom pieces are ordered by choosing a personalisable product,
+     customising it in the product dialog and checking out (which records the custom order).
+     So the button opens the collection of photo-personalised pieces, or the shop if there's none. */
+  const customCategory = () => (catalogue.find((c) => c.products.some((p) => p.custom?.type === 'photo'))
+    || catalogue.find((c) => c.products.some((p) => p.custom)))?.slug;
+
   let lastCategory = null;
   document.addEventListener('click', (e) => {
+    const custom = e.target.closest('a[data-custom-order]');
+    if (custom) {
+      e.preventDefault();
+      const slug = customCategory();
+      if (!slug) { document.getElementById('next')?.scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth' }); return; }
+      if (slug === current) return;
+      if (current === 'home') lastCategory = slug;
+      history.pushState({ route: slug }, '', `#/shop/${slug}`);
+      go(slug);
+      return;
+    }
     const shop = e.target.closest('a[data-shop]');
     if (shop) {
       e.preventDefault();

@@ -755,8 +755,9 @@ export function registerAdmin(r) {
     const [settings, all] = await Promise.all([getSettings(), loadOrders({ status: 'not.in.(delivered,cancelled)' })]);
     const waitingCustom = new Set((await sb.select('custom_orders', { select: 'order_id', status: 'in.(waiting_for_customer,photos_pending)' })).map((c) => c.order_id));
     const waiting = all.filter((o) => o.payment_status !== 'confirmed' || waitingCustom.has(o.id)).map((o) => ({ ...o, chat: orders.customerChatLink(o, settings) }));
-    const sample = { number: `${settings.order_prefix}1024`, customer_name: 'Priya Sharma', total: 1299,
-      items: [{ product_name: 'Custom Photo Heart', variant_name: '', quantity: 1, customization: 'Names: Aarav & Diya; Photo/details to be shared on WhatsApp' }] };
+    // Preview only: placeholder values show where each order detail goes. Not an order.
+    const sample = { number: `${settings.order_prefix}0000`, customer_name: 'Customer Name', phone: '+91 00000 00000', total: 0,
+      items: [{ product_name: 'Product name', variant_name: '', quantity: 1, customization: 'Customization details; Photo/details to be shared on WhatsApp' }] };
     json(res, 200, { number: settings.whatsapp_number, env_number: config.whatsappNumber, waiting,
       previews: { order: orders.fillTemplate(settings.whatsapp_template, sample, settings), custom: orders.fillTemplate(settings.whatsapp_custom_template, sample, settings),
         confirm: orders.fillTemplate(settings.whatsapp_confirm_template, sample, settings) } });

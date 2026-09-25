@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "node scripts/build-static.mjs",
+  "outputDirectory": "public",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{index.html,admin/index.html,admin/login.html}",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/((?!assets/|src/|admin/static/).*)", "destination": "/api/index" }
+  ]
+}
