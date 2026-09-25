@@ -1,4 +1,4 @@
-import { api, esc, inr, icon, PageHeader, ImageUploader, uploadImage, toast, toastError, errorState, setDirty, setQuery, confirmBox } from '../app.js';
+import { api, esc, inr, icon, PageHeader, ImageUploader, uploaderFor, toast, toastError, errorState, setDirty, setQuery, confirmBox } from '../app.js';
 
 const TABS = [
   ['hero', 'Hero', 'dashboard'], ['categories_section', 'Shop Categories', 'categories'], ['featured_section', 'Featured Products', 'star'],
@@ -82,7 +82,7 @@ export default async function content({ view, query }) {
         </div>
         <div class="cms__preview"><p class="cms__preview-label">${icon('eye')} Preview</p><div data-preview></div></div>
       </form>`;
-      ImageUploader(panel.querySelector('[data-hero-image]'), { images: heroImage, single: true, upload: uploadImage, altText: false, onChange: (l) => { heroImage = l; markDirty(); preview(); } });
+      ImageUploader(panel.querySelector('[data-hero-image]'), { images: heroImage, single: true, upload: uploaderFor('content'), altText: false, onChange: (l) => { heroImage = l; markDirty(); preview(); } });
     } else if (tab === 'process' || tab === 'how_to_order') {
       panel.innerHTML = `<form class="cms__split" data-form novalidate>
         <div class="fields">
@@ -132,7 +132,7 @@ export default async function content({ view, query }) {
         ${area('body', 'Your story', c.body, 5000, 10)}
         <div class="field"><span class="label">Photo</span><div data-about-image></div></div>
         ${save}</form>`;
-      ImageUploader(panel.querySelector('[data-about-image]'), { images: aboutImage, single: true, upload: uploadImage, altText: false, onChange: (l) => { aboutImage = l; markDirty(); } });
+      ImageUploader(panel.querySelector('[data-about-image]'), { images: aboutImage, single: true, upload: uploaderFor('content'), altText: false, onChange: (l) => { aboutImage = l; markDirty(); } });
     } else if (tab === 'faq') {
       panel.innerHTML = `<form class="fields" data-form novalidate>
         <h2 class="section-title">FAQ</h2>

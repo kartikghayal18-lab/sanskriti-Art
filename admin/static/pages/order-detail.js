@@ -11,6 +11,7 @@ export default async function orderDetail({ view, params }) {
   catch (err) { view.innerHTML = errorState(err); view.querySelector('[data-retry]')?.addEventListener('click', () => navigate(location.pathname, { replace: true })); return; }
 
   const hasCustom = o.custom.length > 0;
+  const address = [o.shipping_address, o.shipping_city, o.shipping_state, o.shipping_pincode].filter(Boolean).join(', ');
   const flow = m.workflow.filter((k) => hasCustom || !k.startsWith('customization_'));
   const reached = new Map(o.events.filter((e) => e.kind === 'status').map((e) => [e.to_value, e.created_at]));
   const cur = flow.indexOf(o.status);
@@ -20,20 +21,21 @@ export default async function orderDetail({ view, params }) {
   const next = flow[cur + 1];
   const canNext = next && o.allowed.includes(next);
   const pay = o.payment;
+  const PAY = m.payment_labels;   // Pending · Payment Confirmed · Payment Failed · Refunded
   const forward = o.allowed.filter((k) => k !== 'cancelled');
 
   view.innerHTML = `
     ${PageHeader({ crumb: { href: '/admin/orders', label: 'Orders' }, title: `Order ${esc(o.number)}`,
-      text: `Placed ${fmtDateTime(o.created_at)} · ${pill(o.status, labels[o.status])} ${pill(o.payment_status, `Payment ${o.payment_status}`)}`,
+      text: `Placed ${fmtDateTime(o.created_at)} · ${pill(o.status, labels[o.status])} ${pill(o.payment_status, o.payment_status === 'pending' ? 'Payment Pending' : PAY[o.payment_status])}`,
       actions: `<button class="btn btn--ghost" type="button" data-copy>${icon('copy')} <span class="hide-sm">Copy order message</span></button>
         <a class="btn btn--wa" href="${esc(o.chat)}" data-wa-name="${esc(o.customer_name)}">${icon('whatsapp')} WhatsApp</a>` })}
 
     ${canNext ? `<div class="next-step card">
       <span class="next-step__text">${icon('info')} Next step: <strong>${esc(labels[next])}</strong></span>
       <button class="btn btn--primary" type="button" data-next="${next}">Move to ${esc(labels[next])} ${icon('arrow')}</button>
-    </div>` : o.status === 'order_placed' && o.payment_status !== 'paid' ? `<div class="next-step card next-step--warn">
-      <span class="next-step__text">${icon('clock')} Waiting for payment. Confirm it once the money has arrived.</span>
-      <button class="btn btn--primary" type="button" data-open-pay>${icon('check')} Confirm payment</button></div>` : ''}
+    </div>` : o.status === 'order_placed' && ['pending', 'failed'].includes(o.payment_status) ? `<div class="next-step card next-step--warn">
+      <span class="next-step__text">${icon('clock')} Waiting for payment on WhatsApp. Confirm it once the money has arrived.</span>
+      <button class="btn btn--primary" type="button" data-open-pay>${icon('check')} Confirm Payment</button></div>` : ''}
 
     <div class="form-grid">
       <div class="stack">
@@ -109,25 +111,25 @@ export default async function orderDetail({ view, params }) {
 
         <section class="card">
           <h2 class="section-title">Shipping address</h2>
-          <p class="address">${icon('pin')} <span>${esc(o.shipping_address || 'To be shared on WhatsApp')}</span></p>
-          ${o.shipping_address ? `<button class="btn btn--ghost btn--sm" type="button" data-copy-address>${icon('copy')} Copy address</button>` : ''}
+          <p class="address">${icon('pin')} <span>${esc(address || 'To be shared on WhatsApp')}</span></p>
+          ${address ? `<button class="btn btn--ghost btn--sm" type="button" data-copy-address>${icon('copy')} Copy address</button>` : ''}
         </section>
 
         <section class="card">
           <h2 class="section-title">Payment</h2>
           <dl class="kv">
-            <dt>Status</dt><dd>${pill(pay.status)}</dd>
+            <dt>Status</dt><dd>${pill(pay.status, PAY[pay.status])}</dd>
             <dt>Amount</dt><dd>${inr(pay.amount)}</dd>
             <dt>Method</dt><dd>${esc(METHODS[pay.method] || '—')}</dd>
-            <dt>Payment ID</dt><dd class="mono">${esc(pay.reference || '—')}</dd>
-            <dt>Gateway order</dt><dd class="mono">${esc(pay.gateway_order_id || '—')}</dd>
-            <dt>Date</dt><dd>${pay.paid_at ? fmtDateTime(pay.paid_at) : '—'}</dd>
+            <dt>Reference</dt><dd>${esc(pay.reference || '—')}</dd>
+            <dt>Confirmed</dt><dd>${pay.confirmed_at ? `${fmtDateTime(pay.confirmed_at)}<br><small class="muted">Manually by ${esc(pay.confirmed_by || 'an admin')}</small>` : '—'}</dd>
           </dl>
-          <p class="hint" style="margin:10px 0 0">Demo IDs. Real payment details arrive in Phase 2.</p>
+          <p class="hint" style="margin:10px 0 0">Customers pay over WhatsApp. Confirm here only once the money has reached you; nothing is charged on the website.</p>
           <div class="btn-row">
-            ${pay.status === 'pending' || pay.status === 'failed' ? `<button class="btn btn--primary btn--sm" type="button" data-open-pay>${icon('check')} Confirm payment</button>` : ''}
+            ${['pending', 'failed'].includes(pay.status) && o.status !== 'cancelled' ? `<button class="btn btn--primary btn--sm" type="button" data-open-pay>${icon('check')} Confirm Payment</button>` : ''}
             ${pay.status === 'pending' ? '<button class="btn btn--ghost btn--sm" type="button" data-pay="failed">Mark failed</button>' : ''}
-            ${pay.status === 'paid' ? '<button class="btn btn--ghost btn--sm" type="button" data-pay="refunded">Mark refunded</button>' : ''}
+            ${pay.status === 'failed' ? '<button class="btn btn--ghost btn--sm" type="button" data-pay="pending">Back to pending</button>' : ''}
+            ${pay.status === 'confirmed' ? '<button class="btn btn--ghost btn--sm" type="button" data-pay="refunded">Mark refunded</button>' : ''}
           </div>
         </section>
 
@@ -146,19 +148,17 @@ export default async function orderDetail({ view, params }) {
     try { await api('POST', `/orders/${id}/status`, { status, note }); toast(`Order status updated: ${labels[status]}.`); refreshBadges(); reload(); }
     catch (err) { toastError(err); }
   };
+  // Manual only: records who confirmed it and when. No payment service is contacted.
   const openPayment = () => Modal({
-    title: 'Confirm payment', submit: 'Confirm payment',
-    body: `<p class="muted" style="margin:0 0 14px">Only confirm once ${inr(o.total)} has reached your account.</p>
+    title: 'Confirm Payment', submit: 'Confirm Payment',
+    body: `<p class="muted" style="margin:0 0 14px">Confirm once ${inr(o.total)} for order ${esc(o.number)} has reached you. This is recorded as confirmed manually by you.</p>
       <div class="fields">
-        <div class="fields-2">
-          <div class="field"><label for="pm">Method</label><select id="pm" name="method">${m.payment_methods.map((k) => `<option value="${k}">${esc(METHODS[k])}</option>`).join('')}</select></div>
-          <div class="field"><label for="pa">Amount received (₹)</label><input id="pa" name="amount" type="number" min="0" step="1" value="${o.total}" required></div>
-        </div>
-        <div class="field"><label for="pr">Payment / transaction ID</label><input id="pr" name="reference" maxlength="120" placeholder="UPI reference, bank UTR…"></div>
+        <div class="field"><label for="pm">How did they pay? <span>optional</span></label><select id="pm" name="method"><option value="">Not specified</option>${m.payment_methods.map((k) => `<option value="${k}">${esc(METHODS[k])}</option>`).join('')}</select></div>
+        <div class="field"><label for="pr">Reference <span>optional</span></label><input id="pr" name="reference" maxlength="120" placeholder="UPI reference, bank UTR or a note"></div>
       </div>`,
     onSubmit: async (f) => {
-      await api('POST', `/orders/${id}/payment`, { status: 'paid', method: f.method.value, reference: f.reference.value, amount: Number(f.amount.value) });
-      toast('Payment confirmed. Order moved to Payment Confirmed.'); refreshBadges(); reload();
+      await api('POST', `/orders/${id}/payment`, { status: 'confirmed', method: f.method.value, reference: f.reference.value });
+      toast(hasCustom ? 'Payment confirmed. Order moved to Customization Pending.' : 'Payment confirmed. Order moved to Payment Confirmed.'); refreshBadges(); reload();
     },
   });
 
@@ -170,15 +170,18 @@ export default async function orderDetail({ view, params }) {
     if (b.matches('[data-open-pay]')) return openPayment();
     if (b.matches('[data-pay]')) {
       const status = b.dataset.pay;
-      if (!(await confirmBox({ title: status === 'refunded' ? 'Mark as refunded?' : 'Mark payment failed?', message: status === 'refunded' ? 'Use this after you’ve returned the money to the customer.' : 'The order stays open so the customer can try again.', confirm: status === 'refunded' ? 'Mark refunded' : 'Mark failed', danger: true }))) return;
-      try { await api('POST', `/orders/${id}/payment`, { status }); toast(`Payment marked ${status}.`); reload(); } catch (err) { toastError(err); }
+      const copy = { refunded: ['Mark as refunded?', 'Use this after you’ve returned the money to the customer.', 'Mark refunded'],
+        failed: ['Mark payment failed?', 'The order stays open so the customer can try again.', 'Mark failed'],
+        pending: ['Back to pending?', 'Use this when the customer is going to try paying again.', 'Back to pending'] }[status];
+      if (!(await confirmBox({ title: copy[0], message: copy[1], confirm: copy[2], danger: status !== 'pending' }))) return;
+      try { await api('POST', `/orders/${id}/payment`, { status }); toast(`Payment: ${status === 'pending' ? 'Pending' : PAY[status]}.`); refreshBadges(); reload(); } catch (err) { toastError(err); }
     }
     if (b.matches('[data-cancel]')) {
-      if (!(await confirmBox({ title: `Cancel order ${o.number}?`, message: `Stock for its items goes back to inventory.${o.payment_status === 'paid' ? ' The payment stays marked paid until you mark it refunded.' : ''}`, confirm: 'Cancel order', danger: true }))) return;
+      if (!(await confirmBox({ title: `Cancel order ${o.number}?`, message: `Stock for its items goes back to inventory.${o.payment_status === 'confirmed' ? ' The payment stays confirmed until you mark it refunded.' : ''}`, confirm: 'Cancel order', danger: true }))) return;
       setStatus('cancelled');
     }
     if (b.matches('[data-copy]')) { try { await navigator.clipboard.writeText(o.message); toast('Order message copied.'); } catch { toast('Copying isn’t available in this browser.', 'error'); } }
-    if (b.matches('[data-copy-address]')) { try { await navigator.clipboard.writeText(`${o.customer_name}\n${o.shipping_address}\n${o.phone}`); toast('Address copied.'); } catch { toast('Copying isn’t available in this browser.', 'error'); } }
+    if (b.matches('[data-copy-address]')) { try { await navigator.clipboard.writeText(`${o.customer_name}\n${address}\n${o.phone}`); toast('Address copied.'); } catch { toast('Copying isn’t available in this browser.', 'error'); } }
   });
   view.querySelectorAll('[data-custom-form]').forEach((f) => f.addEventListener('submit', async (e) => {
     e.preventDefault();

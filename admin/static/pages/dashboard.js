@@ -44,7 +44,8 @@ export default async function dashboard({ view }) {
       </div>
       <span class="date-chip">${icon('calendar')} ${new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
     </div>
-    <section class="stats" data-stats aria-label="Store statistics">${Array.from({ length: 7 }, () => '<div class="card skeleton" style="height:100px"></div>').join('')}</section>
+    <section class="stats stats--dash" data-stats aria-label="Store statistics">${Array.from({ length: 7 }, () => '<div class="card skeleton" style="height:100px"></div>').join('')}</section>
+    <nav class="card pipeline" data-pipeline aria-label="Orders by stage"></nav>
 
     <div class="grid-2">
       <section class="card card--chart" aria-labelledby="chart-title">
@@ -131,14 +132,22 @@ export default async function dashboard({ view }) {
       const labels = Object.fromEntries(m.order_statuses);
       const s = d.stats;
       $('[data-stats]').innerHTML = [
-        StatCard({ label: 'Total Revenue', value: inrShort(s.total_revenue), icon: 'rupee', tone: 'gold', meta: trend(s.month.revenue.change), href: '/admin/payments?filter=paid' }),
+        StatCard({ label: 'Total Revenue', value: inrShort(s.total_revenue), icon: 'rupee', tone: 'gold', meta: `<strong>${inr(s.month_revenue)}</strong> this month · ${trend(s.month.revenue.change)}`, href: '/admin/orders?filter=confirmed' }),
         StatCard({ label: 'Today’s Revenue', value: inr(s.today_revenue), icon: 'rupee', tone: 'gold', meta: `${s.today_orders} ${s.today_orders === 1 ? 'order' : 'orders'} today` }),
         StatCard({ label: 'Total Orders', value: s.total_orders.toLocaleString('en-IN'), icon: 'orders', meta: trend(s.month.orders.change), href: '/admin/orders' }),
-        StatCard({ label: 'Pending Orders', value: s.pending_orders, icon: 'clock', tone: s.pending_orders ? 'warn' : '', meta: 'Awaiting payment', href: '/admin/orders?filter=pending' }),
-        StatCard({ label: 'Custom Orders', value: s.custom_orders, icon: 'custom', meta: 'In progress', href: '/admin/custom-orders' }),
+        StatCard({ label: 'Pending Orders', value: s.pending_orders, icon: 'clock', tone: s.pending_orders ? 'warn' : '', meta: 'Awaiting payment on WhatsApp', href: '/admin/orders?filter=pending' }),
+        StatCard({ label: 'Custom Orders', value: s.custom_orders, icon: 'custom', meta: `${s.pending_customizations} waiting for the customer`, href: '/admin/custom-orders' }),
         StatCard({ label: 'Customers', value: s.total_customers.toLocaleString('en-IN'), icon: 'customers', meta: `${s.month.customers.value} new this month`, href: '/admin/customers' }),
         StatCard({ label: 'Low Stock', value: s.low_stock, icon: 'alert', tone: s.low_stock ? 'bad' : '', meta: `At or below ${s.low_stock_threshold} left`, href: '/admin/inventory?filter=low_stock' }),
       ].join('');
+
+      $('[data-pipeline]').innerHTML = [
+        ['Preparing', s.preparing_orders, '/admin/orders?filter=confirmed', 'Payment confirmed; being made or packed'],
+        ['Shipped', s.shipped_orders, '/admin/orders?filter=shipped', 'On the way to the customer'],
+        ['Delivered', s.delivered_orders, '/admin/orders?filter=delivered', 'Completed orders'],
+        ['Cancelled', s.cancelled_orders, '/admin/orders?filter=cancelled', 'Cancelled orders'],
+        ['Customizations pending', s.pending_customizations, '/admin/custom-orders?filter=waiting_for_customer', 'Waiting for photos or details on WhatsApp'],
+      ].map(([l, n, href, title]) => `<a class="pipeline__item" href="${href}" title="${title}"><strong>${n.toLocaleString('en-IN')}</strong><span>${l}</span></a>`).join('');
 
       chartData = d.chart;
       renderChart();

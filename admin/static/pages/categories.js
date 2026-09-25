@@ -1,4 +1,4 @@
-import { api, meta, esc, icon, pill, PageHeader, SearchBar, loadingRows, emptyState, errorState, toast, toastError, confirmBox, Modal, ImageUploader, uploadImage, debounce } from '../app.js';
+import { api, meta, esc, icon, pill, PageHeader, SearchBar, loadingRows, emptyState, errorState, toast, toastError, confirmBox, Modal, ImageUploader, uploaderFor, debounce } from '../app.js';
 
 const slugify = (s) => String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' and ')
   .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
@@ -61,7 +61,7 @@ export default async function categories({ view }) {
         <label class="switch"><span>Show in the shop</span><input type="checkbox" name="active"${!c || c.active ? ' checked' : ''}></label>
       </div>`,
       onOpen: (form) => {
-        uploader = ImageUploader(form.querySelector('[data-uploader]'), { images: image, single: true, upload: uploadImage, onChange: (l) => { image = l; } });
+        uploader = ImageUploader(form.querySelector('[data-uploader]'), { images: image, single: true, upload: uploaderFor('category'), onChange: (l) => { image = l; } });
         form.addEventListener('input', (e) => {
           if (e.target.name === 'name' && !slugTouched) form.slug.value = slugify(e.target.value);
           if (e.target.name === 'slug') slugTouched = true;

@@ -1,4 +1,4 @@
-import { api, meta, esc, fmtDateTime, fmtDate, icon, pill, labelize, PageHeader, OrderTimeline, Avatar, ImageUploader, uploadImage, toast, toastError, errorState, refreshBadges, navigate } from '../app.js';
+import { api, meta, esc, fmtDateTime, fmtDate, icon, pill, labelize, PageHeader, OrderTimeline, Avatar, ImageUploader, uploaderFor, toast, toastError, errorState, refreshBadges, navigate } from '../app.js';
 
 export default async function customOrderDetail({ view, params }) {
   const m = await meta();
@@ -60,7 +60,7 @@ export default async function customOrderDetail({ view, params }) {
 
   let photos = (c.photos || []).map((url) => ({ url, alt: '' }));
   ImageUploader(view.querySelector('[data-photos]'), {
-    images: photos, max: 8, upload: uploadImage, altText: false, hint: 'Customer photos',
+    images: photos, max: 8, primary: false, upload: uploaderFor('customer_photo'), altText: false, hint: 'Photos the customer sent on WhatsApp',
     onChange: async (list) => {
       photos = list;
       try {

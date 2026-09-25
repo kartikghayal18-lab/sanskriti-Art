@@ -6,27 +6,14 @@
 
 import { esc, icon, debounce, inr } from './lib.js';
 import { toast, confirmBox, emptyState, errorState, loadingRows, nextSort } from './components.js';
-import { mockApi, resetDemo } from './mock/api.js';
 export * from './lib.js';
 export * from './components.js';
-export { resetDemo };
-
-/**
- * PHASE 1: the admin runs entirely on local demo data (./mock). Set USE_MOCK to
- * false in Phase 2 to talk to the real /api/admin endpoints; the pages don't change.
- * Signing in and out always uses the real server session.
- */
-export const USE_MOCK = true;
 
 /* ======================================================================
    API
    ====================================================================== */
 export class ApiError extends Error { constructor(status, message) { super(message); this.status = status; } }
 export async function api(method, path, body, { raw } = {}) {
-  if (USE_MOCK && path !== '/logout') {
-    try { return await mockApi(method, path, body, raw); }
-    catch (err) { throw new ApiError(err.status || 500, err.message); }
-  }
   const headers = { 'X-Requested-With': 'sanskriti-admin' };
   let payload;
   if (raw) { headers['Content-Type'] = raw.type || 'application/octet-stream'; payload = raw; }
@@ -45,11 +32,33 @@ export async function api(method, path, body, { raw } = {}) {
   if (!res.ok) throw new ApiError(res.status, data.error || 'Unable to save changes. Please try again.');
   return data;
 }
-export const uploadImage = (file) => {
-  if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) return Promise.reject(new Error(`${file.name}: please choose a JPG, PNG, WebP or GIF image.`));
-  if (file.size > 5 * 1024 * 1024) return Promise.reject(new Error(`${file.name} is larger than 5 MB.`));
-  return api('POST', '/uploads', undefined, { raw: file });
-};
+/**
+ * Uploads one image to the server, which stores it on Cloudinary and records it in
+ * Supabase. Resolves with { url, public_id } only after both succeeded.
+ * kind: product | category | logo | content | customer_photo. onProgress(0–100) is optional.
+ */
+export const uploadImage = (file, kind = 'product', onProgress = null) => new Promise((resolve, reject) => {
+  if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) return reject(new Error(`${file.name}: please choose a JPG, PNG, WebP or GIF image.`));
+  if (file.size > 5 * 1024 * 1024) return reject(new Error(`${file.name} is larger than 5 MB.`));
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', `/api/admin/uploads?kind=${encodeURIComponent(kind)}`);
+  xhr.setRequestHeader('X-Requested-With', 'sanskriti-admin');
+  xhr.setRequestHeader('Content-Type', file.type);
+  xhr.timeout = 90_000;
+  xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100)); };
+  xhr.onload = () => {
+    let data = {};
+    try { data = JSON.parse(xhr.responseText || '{}'); } catch { /* not JSON */ }
+    if (xhr.status === 401) { location.assign(`/admin/login?next=${encodeURIComponent(location.pathname)}`); return reject(new ApiError(401, 'Please sign in again.')); }
+    if (xhr.status >= 200 && xhr.status < 300 && data.url) resolve(data);
+    else reject(new ApiError(xhr.status, `${file.name}: ${data.error || 'the upload failed. Please try again.'}`));
+  };
+  xhr.onerror = () => reject(new ApiError(0, `${file.name}: couldn’t reach the server. Check your connection and try again.`));
+  xhr.ontimeout = () => reject(new ApiError(0, `${file.name}: the upload took too long. Please try again.`));
+  xhr.send(file);
+});
+/** An ImageUploader `upload` function for a given kind of image. */
+export const uploaderFor = (kind) => (file, onProgress) => uploadImage(file, kind, onProgress);
 
 let metaCache = null;
 export async function meta(refresh = false) {
@@ -119,7 +128,6 @@ const NAV = [
   ['custom-orders', 'Custom Orders', 'custom', 'custom_orders'],
   ['customers', 'Customers', 'customers'],
   ['inventory', 'Inventory', 'inventory', 'inventory'],
-  ['payments', 'Payments', 'payments'],
   ['group', 'Content'],
   ['content', 'Website Content', 'content'],
   ['reviews', 'Reviews', 'reviews', 'reviews'],
@@ -183,7 +191,6 @@ const ROUTES = [
   [/^\/admin\/custom-orders$/, 'custom-orders', 'custom-orders'],
   [/^\/admin\/custom-orders\/(\d+)$/, 'custom-order-detail', 'custom-orders'],
   [/^\/admin\/inventory$/, 'inventory', 'inventory'],
-  [/^\/admin\/payments$/, 'payments', 'payments'],
   [/^\/admin\/reviews$/, 'reviews', 'reviews'],
   [/^\/admin\/content$/, 'content', 'content'],
   [/^\/admin\/whatsapp$/, 'whatsapp', 'whatsapp'],
@@ -287,13 +294,12 @@ document.addEventListener('click', (e) => {
   else if (e.target.closest('.search__item')) { searchBox.hidden = true; searchInput.value = ''; }
 });
 
-/* ---------- WhatsApp (Phase 1: no real chats are opened) ---------- */
+/* ---------- WhatsApp chats open in a new tab (or the WhatsApp app on phones) ---------- */
 document.addEventListener('click', (e) => {
   const a = e.target.closest('a[href^="https://wa.me/"]');
-  if (!a || !USE_MOCK) return;
+  if (!a || e.defaultPrevented) return;
   e.preventDefault();
-  const who = a.dataset.waName || a.getAttribute('aria-label')?.replace(/^(Chat with|WhatsApp)\s*/i, '').replace(/ on WhatsApp$/i, '') || 'the customer';
-  toast(`Demo: this would open a WhatsApp chat with ${who}.`);
+  window.open(a.href, '_blank', 'noopener');
 });
 
 /* ---------- Appearance preferences (Settings → Appearance) ---------- */
@@ -304,7 +310,6 @@ export function applyAppearance(s) {
 }
 
 /* ---------- Boot ---------- */
-if (USE_MOCK) document.querySelector('[data-demo-pill]')?.removeAttribute('hidden');
 api('GET', '/settings').then((d) => applyAppearance(d.settings)).catch(() => {});
 refreshBadges();
 setInterval(refreshBadges, 60_000);

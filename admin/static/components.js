@@ -12,7 +12,7 @@ import { esc, icon, labelize, initials } from './lib.js';
 
 /* ---------- Status badge ---------- */
 const TONES = {
-  order_placed: 'warn', payment_verified: 'ok', customization_pending: 'violet', customization_received: 'violet',
+  order_placed: 'warn', payment_confirmed: 'ok', confirmed: 'ok', customization_pending: 'violet', customization_received: 'violet',
   in_production: 'info', ready_to_ship: 'rose', shipped: 'info', delivered: 'ok', cancelled: 'muted',
   pending: 'warn', paid: 'ok', failed: 'bad', refunded: 'muted',
   waiting_for_customer: 'warn', photos_pending: 'warn', photos_received: 'violet', requirements_received: 'violet',
@@ -20,7 +20,7 @@ const TONES = {
   in_stock: 'ok', low_stock: 'warn', out_of_stock: 'bad', active: 'ok', inactive: 'muted', draft: 'muted',
   approved: 'ok', hidden: 'muted', not_required: 'muted', received: 'ok', changes_requested: 'bad', featured: 'rose',
 };
-const LABELS = { in_stock: 'In Stock', low_stock: 'Low Stock', out_of_stock: 'Out of Stock', design_approved: 'Approved' };
+const LABELS = { in_stock: 'In Stock', low_stock: 'Low Stock', out_of_stock: 'Out of Stock', design_approved: 'Approved', confirmed: 'Payment Confirmed', failed: 'Payment Failed' };
 export const pill = (key, text) => `<span class="pill tone-${TONES[key] || 'muted'}">${esc(text || LABELS[key] || labelize(key))}</span>`;
 export const StatusBadge = pill;
 
@@ -188,7 +188,7 @@ export function Modal({ title, body, submit = 'Save', cancel = 'Cancel', onSubmi
 }
 
 /* ---------- Image uploader ----------
-   ImageUploader(container, { images: [{url, alt}], max, single, upload(file) → {url}, onChange(images) })
+   ImageUploader(container, { images: [{url, alt}], max, single, upload(file, onProgress) → {url}, onChange(images) })
    Upload area (click or drop), previews, primary image, reorder, alt text, delete. */
 export function ImageUploader(container, { images = [], max = 12, single = false, primary = !single, upload, onChange = () => {}, altText = true, hint = 'JPG, PNG, WebP or GIF · up to 5 MB' }) {
   let list = images.map((i) => ({ ...i }));
@@ -197,7 +197,7 @@ export function ImageUploader(container, { images = [], max = 12, single = false
     const tiles = list.map((im, i) => `
       <div class="image-tile${im.uploading ? ' is-uploading' : ''}">
         ${i === 0 && primary ? '<span class="pill tone-rose image-tile__primary">Primary</span>' : ''}
-        <img src="${esc(im.preview || im.url)}" alt="">
+        <img src="${esc(im.preview || im.url)}" alt="">${im.uploading ? `<span class="image-tile__progress" role="status">Uploading${im.progress ? ` ${im.progress}%` : '…'}</span>` : ''}
         ${altText ? `<input class="image-tile__alt" placeholder="Alt text" aria-label="Image ${i + 1} description" value="${esc(im.alt || '')}" data-alt="${i}" maxlength="150">` : ''}
         <div class="image-tile__bar">
           ${single ? '' : `<button class="icon-btn" type="button" data-img-move="${i}" data-dir="-1" aria-label="Move left" ${i === 0 ? 'disabled' : ''}>${icon('left')}</button>
@@ -218,7 +218,12 @@ export function ImageUploader(container, { images = [], max = 12, single = false
       const entry = { url: '', alt: '', preview: URL.createObjectURL(file), uploading: true };
       if (single) list = [];
       list.push(entry); render();
-      try { entry.url = (await upload(file)).url; entry.uploading = false; }
+      const onProgress = (pct) => {
+        entry.progress = Math.min(pct, 99);   // 100% only once Cloudinary + the database have confirmed
+        const tag = container.querySelectorAll('.image-tile')[list.indexOf(entry)]?.querySelector('.image-tile__progress');
+        if (tag) tag.textContent = `Uploading ${entry.progress}%`;
+      };
+      try { entry.url = (await upload(file, onProgress)).url; entry.uploading = false; if (entry.preview) URL.revokeObjectURL(entry.preview); entry.preview = ''; }
       catch (err) { list.splice(list.indexOf(entry), 1); toastError(err); }
       render(); emit();
     }

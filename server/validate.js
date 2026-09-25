@@ -46,10 +46,10 @@ export function email(v, { required = false } = {}) {
   if (s && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) throw bad('Please enter a valid email address.');
   return s;
 }
-/** Image/asset URLs: our own uploads or site assets only. */
+/** Image/asset URLs: bundled site assets or Cloudinary images uploaded through the admin (checked against `media` later). */
 export function assetUrl(v, label = 'Image') {
-  const s = str(v, label, { max: 300 });
-  if (s && !/^\/(uploads|assets)\/[\w\-./]+$/.test(s)) throw bad(`${label} must be an uploaded image.`);
+  const s = str(v, label, { max: 400 });
+  if (s && !/^(\/assets\/[\w\-./]+|https:\/\/res\.cloudinary\.com\/[\w-]+\/image\/upload\/[\w\-./]+)$/.test(s)) throw bad(`${label} must be an uploaded image.`);
   if (s.includes('..')) throw bad(`${label} is not valid.`);
   return s;
 }

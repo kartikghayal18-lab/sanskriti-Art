@@ -1,6 +1,6 @@
 import { api, meta, listController, esc, inr, fmtDate, icon, pill, PageHeader, SearchBar, chips, DataTable, Avatar, pager, loadingRows, emptyState } from '../app.js';
 
-const FILTERS = [['all', 'All'], ['pending', 'Pending'], ['paid', 'Paid'], ['customization_pending', 'Customization Pending'],
+const FILTERS = [['all', 'All'], ['pending', 'Payment Pending'], ['confirmed', 'Payment Confirmed'], ['customization_pending', 'Customization Pending'],
   ['customization_received', 'Customization Received'], ['in_production', 'In Production'], ['ready_to_ship', 'Ready to Ship'],
   ['shipped', 'Shipped'], ['delivered', 'Delivered'], ['cancelled', 'Cancelled']];
 

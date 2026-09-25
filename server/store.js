@@ -1,75 +1,66 @@
 /**
- * Settings (key → string) and website content (key → JSON) with defaults.
- * Only PUBLIC_SETTINGS ever reach the storefront. Secrets are never stored here;
- * they stay in environment variables.
+ * Settings (key → string) and website content (key → JSON) with defaults, stored
+ * in Supabase. Only PUBLIC_SETTINGS ever reach the storefront. Secrets are never
+ * stored here; they stay in environment variables.
  */
-import { db, all, one, run } from './db.js';
+import { sb } from './supabase.js';
 import { config } from './env.js';
 
+const lines = (...l) => l.join('\n');
 export const SETTING_DEFAULTS = {
-  store_name: 'Sanskriti Art',
-  logo_url: '',
-  email: '',
-  phone: '',
-  whatsapp_number: config.whatsappNumber,
-  address: '',
-  instagram: '',
-  facebook: '',
-  order_prefix: 'SA-',
-  low_stock_threshold: '3',
-  production_time: '',
-  whatsapp_template: [
-    'Hello {{STORE_NAME}} 👋',
-    '',
-    "I'd like to confirm my order.",
-    '',
-    'Order ID: {{ORDER_ID}}',
-    '',
-    '{{ITEMS}}',
-    '',
-    'Total:',
-    '₹{{TOTAL}}',
-    '',
-    'Customization:',
-    '{{CUSTOMIZATION}}',
-    '',
-    "I'll send my photos/details here.",
-    '',
-    'Thank you ❤️',
-  ].join('\n'),
+  store_name: 'Sanskriti Art', tagline: 'Handmade resin art & preserved memories', logo_url: '',
+  email: '', phone: '', whatsapp_number: '', address: '', gstin: '',
+  instagram: '', facebook: '', pinterest: '', youtube: '',
+  order_prefix: 'SA-', low_stock_threshold: '3', production_time: '', max_quantity: '10', allow_backorders: '0',
+  shipping_flat: '0', free_shipping_above: '0', delivery_time: '', ship_regions: 'All India', cod: '0',
+  notify_new_order: '1', notify_low_stock: '1', notify_reviews: '1', notify_daily_summary: '0', notify_email: '',
+  appearance_density: 'comfortable', appearance_sidebar_art: '1', appearance_reduce_motion: '0',
+  whatsapp_template: lines('Hi {{STORE_NAME}}, I have placed an order.', '', 'Order ID: {{ORDER_ID}}', 'Name: {{FULL_NAME}}',
+    'Product: {{PRODUCT_NAME}}', 'Quantity: {{QUANTITY}}', 'Total: ₹{{TOTAL}}', '', '{{CUSTOMIZATION}}', '', 'I would like to confirm my order and payment.'),
+  whatsapp_custom_template: lines('Hi {{CUSTOMER_NAME}} 🌸', '', 'Thank you for your order {{ORDER_ID}} with {{STORE_NAME}}!', '',
+    'To start your {{PRODUCT}}, please share:', '• 1–3 clear photos', '• Any names, dates or colours you’d like', '',
+    'We’ll send you a design preview to approve before we begin.'),
+  whatsapp_confirm_template: lines('Hi {{CUSTOMER_NAME}},', '', 'Your payment for order {{ORDER_ID}} is confirmed ✅', 'Total: ₹{{TOTAL}}', '',
+    'We’ll start handcrafting it now and keep you updated here.', '', 'With love,', '{{STORE_NAME}}'),
 };
-export const PUBLIC_SETTINGS = ['store_name', 'logo_url', 'email', 'phone', 'whatsapp_number', 'address', 'instagram', 'facebook', 'production_time'];
+export const PUBLIC_SETTINGS = ['store_name', 'tagline', 'logo_url', 'email', 'phone', 'whatsapp_number', 'address', 'instagram', 'facebook',
+  'pinterest', 'youtube', 'production_time', 'max_quantity'];
 
-export function getSettings() {
+/* Short-lived cache; every save clears it. */
+let settingsCache = null, contentCache = null;
+const TTL = 15_000;
+export const clearStoreCache = () => { settingsCache = null; contentCache = null; };
+
+export async function getSettings() {
+  if (settingsCache && settingsCache.until > Date.now()) return { ...settingsCache.value };
   const out = { ...SETTING_DEFAULTS };
-  for (const { key, value } of all('SELECT key, value FROM settings')) out[key] = value;
-  return out;
+  for (const { key, value } of await sb.select('settings', { select: 'key,value' })) out[key] = value;
+  // The business number comes from WHATSAPP_BUSINESS_NUMBER unless the owner set one in Admin → WhatsApp.
+  if (!out.whatsapp_number) out.whatsapp_number = config.whatsappNumber;
+  settingsCache = { value: out, until: Date.now() + TTL };
+  return { ...out };
 }
-export function publicSettings() {
-  const s = getSettings();
+export async function publicSettings() {
+  const s = await getSettings();
   return Object.fromEntries(PUBLIC_SETTINGS.map((k) => [k, s[k]]));
 }
-export function saveSettings(values) {
-  const stmt = db.prepare(`INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now'))
-    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`);
-  for (const [k, v] of Object.entries(values)) stmt.run(k, String(v));
+export async function saveSettings(values) {
+  const now = new Date().toISOString();
+  const rows = Object.entries(values).map(([key, value]) => ({ key, value: String(value), updated_at: now }));
+  if (rows.length) await sb.insert('settings', rows, { upsert: true, onConflict: 'key', select: 'key' });
+  clearStoreCache();
 }
 
 export const CONTENT_DEFAULTS = {
   hero: {
-    eyebrow: 'Handmade Resin Art',
-    line1: 'Preserve Your',
-    line2: 'Special Memories',
-    script: 'Forever',
+    eyebrow: 'Handmade Resin Art', line1: 'Preserve Your', line2: 'Special Memories', script: 'Forever',
     lede: 'Real flowers, precious moments and emotions preserved beautifully in resin art.',
-    primary_cta: 'Shop Now',
-    secondary_cta: 'Watch Our Story',
+    primary_cta: 'Shop Now', secondary_cta: 'Watch Our Story', image_url: '/assets/images/hero-product.webp',
   },
+  categories_section: { eyebrow: 'Our Collection', title: 'Shop by', title_accent: 'Category', lede: 'Discover handmade pieces created to preserve your most beautiful moments.' },
+  featured_section: { title: 'Featured Pieces', lede: 'Our most-loved keepsakes, chosen by you.', limit: 6 },
   process: {
-    eyebrow: 'Our Process',
-    title: "How It's",
-    title_accent: 'Made',
-    lede: 'From your memories to a timeless piece of art.',
+    eyebrow: 'Our Process', title: "How It's", title_accent: 'Made', lede: 'From your memories to a timeless piece of art.',
     steps: [
       { title: 'Share Your Idea', text: 'Send us a photo, your flowers or a few words about the moment you want to keep.' },
       { title: 'We Design & Confirm', text: 'We plan the layout and colours and confirm every detail with you before we begin.' },
@@ -78,36 +69,33 @@ export const CONTENT_DEFAULTS = {
     ],
   },
   how_to_order: {
-    eyebrow: 'Simple & Personal',
-    title: 'How to',
-    title_accent: 'Order',
-    lede: "Choose your favourite creation and we'll take care of the rest.",
+    eyebrow: 'How to Order', title: 'Create Your Memory', title_accent: 'In 3 Simple Steps',
+    lede: 'Choose your favourite piece, add it to your cart, and complete your order.',
     steps: [
-      { title: 'Select Your Product', text: "Browse our collection and choose the resin artwork you'd love to make yours." },
-      { title: 'Add to Cart', text: 'Add your chosen product to your cart and review your order details.' },
-      { title: 'Buy It & Connect With Us', text: "Complete your order and you'll be redirected to our WhatsApp order conversation, where our team will personally connect with you." },
-      { title: 'Confirm Your Order on WhatsApp', text: 'Share your photos or details and confirm the final design, payment and delivery with us.' },
+      { title: 'Select Your Product', text: 'Browse our handmade resin creations and choose the piece you love.' },
+      { title: 'Add To Cart', text: 'Select the required options, personalize your product if available, and add it to your cart.' },
+      { title: 'Buy & Confirm', text: 'Complete your purchase securely. After placing your order, you’ll receive your order details and can continue the customization conversation with us on WhatsApp when required.' },
     ],
-    cta_title: 'Ready to Preserve',
-    cta_accent: 'Your Memories?',
-    cta_label: 'Explore Our Collection',
+    cta_title: 'Ready to Create', cta_accent: 'Something Special?', cta_label: 'Shop Now',
   },
-  about: { title: 'About Sanskriti Art', body: '' },
+  about: { title: 'About Sanskriti Art', body: '', image_url: '' },
   faq: { items: [] },
-  contact: { tagline: 'Handmade resin art that keeps your most precious moments, forever.', hours: '' },
+  contact: { tagline: 'Handmade resin art that keeps your most precious moments, forever.', hours: '', email: '', phone: '', address: '' },
 };
 export const CONTENT_KEYS = Object.keys(CONTENT_DEFAULTS);
 
-export function getContent(key) {
-  const row = one('SELECT value FROM content WHERE key = ?', key);
-  const base = structuredClone(CONTENT_DEFAULTS[key] ?? {});
-  if (!row) return base;
-  try { return { ...base, ...JSON.parse(row.value) }; } catch { return base; }
+export async function allContent() {
+  if (contentCache && contentCache.until > Date.now()) return structuredClone(contentCache.value);
+  const rows = await sb.select('content', { select: 'key,value' });
+  const out = Object.fromEntries(CONTENT_KEYS.map((k) => {
+    const row = rows.find((r) => r.key === k);
+    return [k, { ...structuredClone(CONTENT_DEFAULTS[k]), ...(row?.value && typeof row.value === 'object' ? row.value : {}) }];
+  }));
+  contentCache = { value: out, until: Date.now() + TTL };
+  return structuredClone(out);
 }
-export function allContent() {
-  return Object.fromEntries(CONTENT_KEYS.map((k) => [k, getContent(k)]));
-}
-export function saveContent(key, value) {
-  run(`INSERT INTO content (key, value, updated_at) VALUES (?, ?, datetime('now'))
-    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`, key, JSON.stringify(value));
+export async function getContent(key) { return (await allContent())[key]; }
+export async function saveContent(key, value) {
+  await sb.insert('content', { key, value, updated_at: new Date().toISOString() }, { upsert: true, onConflict: 'key', select: 'key' });
+  clearStoreCache();
 }

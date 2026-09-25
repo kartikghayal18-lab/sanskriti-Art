@@ -9,7 +9,7 @@ export default async function customerDetail({ view, params }) {
   try { c = await api('GET', `/customers/${Number(params[0])}`); }
   catch (err) { view.innerHTML = errorState(err); return; }
   const live = c.orders.filter((o) => o.status !== 'cancelled');
-  const avg = live.length ? Math.round(c.total_spent / Math.max(1, c.orders.filter((o) => o.payment_status === 'paid').length)) : 0;
+  const avg = live.length ? Math.round(c.total_spent / Math.max(1, c.orders.filter((o) => o.payment_status === 'confirmed').length)) : 0;
 
   view.innerHTML = `
     ${PageHeader({ crumb: { href: '/admin/customers', label: 'Customers' }, title: esc(c.name),

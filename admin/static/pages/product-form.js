@@ -1,4 +1,4 @@
-import { api, meta, esc, icon, PageHeader, ImageUploader, toast, toastError, confirmBox, uploadImage, navigate, setDirty, refreshBadges, errorState } from '../app.js';
+import { api, meta, esc, icon, PageHeader, ImageUploader, toast, toastError, confirmBox, uploaderFor, navigate, setDirty, refreshBadges, errorState } from '../app.js';
 
 const slugify = (s) => String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' and ')
   .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
@@ -17,6 +17,7 @@ export default async function productForm({ view, params }) {
   catch (err) { view.innerHTML = errorState(err); return; }
   let images = p.images.map((i) => ({ url: i.url, alt: i.alt }));
   const variants = p.variants.map((v) => ({ ...v }));
+  const loadedStock = new Map(p.variants.map((v) => [v.id, v.stock]));   // lets the server keep live stock if you didn't change it
   let optionName = variants[0]?.option_name || 'Size';
   let slugTouched = !!id;
 
@@ -138,7 +139,7 @@ export default async function productForm({ view, params }) {
   const $ = (s) => view.querySelector(s);
   const dirty = () => { setDirty(true); $('[data-save-status]').textContent = 'Unsaved changes'; };
 
-  const uploader = ImageUploader($('[data-images]'), { images, upload: uploadImage, onChange: (list) => { images = list; dirty(); } });
+  const uploader = ImageUploader($('[data-images]'), { images, upload: uploaderFor('product'), onChange: (list) => { images = list; dirty(); } });
 
   /* ---------- Live previews ---------- */
   const syncPreviews = () => {
@@ -242,14 +243,14 @@ export default async function productForm({ view, params }) {
       name: form.name.value, slug: form.slug.value || slugify(form.name.value),
       short_description: form.short_description.value, description: form.description.value,
       category_id: num(form.category_id.value), price: num(form.price.value), compare_at_price: num(form.compare_at_price.value),
-      sku: form.sku.value, stock: num(form.stock.value) ?? 0, low_stock_threshold: num(form.low_stock_threshold.value),
+      sku: form.sku.value, stock: num(form.stock.value) ?? 0, stock_loaded: id ? p.stock : null, low_stock_threshold: num(form.low_stock_threshold.value),
       active: form.status.value === '1', featured: form.featured.checked, bestseller: form.bestseller.checked,
       material: form.material.value, size: form.size.value, weight: form.weight.value, finish: form.finish.value,
       care: form.care.value, production_time: form.production_time.value,
       custom_available: form.custom_available.checked, custom_type: form.custom_type.value,
       custom_instructions: form.custom_instructions.value, whatsapp_required: form.whatsapp_required.checked,
       seo_title: form.seo_title.value, seo_description: form.seo_description.value,
-      images, variants: variants.map((v) => ({ id: v.id || null, option_name: optionName, name: v.name, sku: v.sku, price: num(v.price), stock: num(v.stock) ?? 0 })),
+      images, variants: variants.map((v) => ({ id: v.id || null, option_name: optionName, name: v.name, sku: v.sku, price: num(v.price), stock: num(v.stock) ?? 0, stock_loaded: v.id ? (loadedStock.get(v.id) ?? null) : null })),
     };
     const btn = $('[data-save]');
     btn.disabled = true; btn.textContent = 'Saving…';

@@ -5,10 +5,12 @@ const TEMPLATES = [
   ['whatsapp_custom_template', 'Customization message', 'What you send to ask for photos and details.'],
   ['whatsapp_confirm_template', 'Order confirmation', 'What you send once the payment is confirmed.'],
 ];
-const PLACEHOLDERS = ['{{CUSTOMER_NAME}}', '{{ORDER_ID}}', '{{PRODUCT}}', '{{ITEMS}}', '{{TOTAL}}', '{{CUSTOMIZATION}}', '{{STORE_NAME}}'];
+const PLACEHOLDERS = ['{{ORDER_ID}}', '{{FULL_NAME}}', '{{CUSTOMER_NAME}}', '{{PRODUCT_NAME}}', '{{QUANTITY}}', '{{TOTAL}}', '{{CUSTOMIZATION}}', '{{ITEMS}}', '{{PRODUCT}}', '{{STORE_NAME}}'];
 const SAMPLE = {
-  '{{CUSTOMER_NAME}}': 'Priya', '{{ORDER_ID}}': 'SA-1024', '{{PRODUCT}}': 'Custom Photo Heart', '{{TOTAL}}': '1,299',
-  '{{ITEMS}}': 'Product:\nCustom Photo Heart\nQuantity:\n1', '{{CUSTOMIZATION}}': 'Photo/details to be shared on WhatsApp',
+  '{{CUSTOMER_NAME}}': 'Priya', '{{FULL_NAME}}': 'Priya Sharma', '{{ORDER_ID}}': 'SA-1024', '{{PRODUCT}}': 'Custom Photo Heart',
+  '{{PRODUCT_NAME}}': 'Custom Photo Heart', '{{QUANTITY}}': '1', '{{TOTAL}}': '1,299',
+  '{{ITEMS}}': 'Product:\nCustom Photo Heart\nQuantity:\n1',
+  '{{CUSTOMIZATION}}': 'Customization: Names: Aarav & Diya\nI will send my customization photos/details here.',
 };
 
 export default async function whatsapp({ view }) {
@@ -21,7 +23,7 @@ export default async function whatsapp({ view }) {
 
   view.innerHTML = `
     ${PageHeader({ title: 'WhatsApp', text: 'Orders open WhatsApp with their details. You carry on each conversation yourself; there are no bots.' })}
-    <p class="notice">${icon('info')} Demo mode: buttons show what would happen. Nothing is sent to WhatsApp until Phase 2.</p>
+    <p class="notice">${icon('info')} WhatsApp buttons open a chat with a prefilled message. You send it yourself; photos and replies stay in WhatsApp, so mark them in the order when they arrive.</p>
     <div class="form-grid">
       <div class="stack">
         <section class="card">
@@ -63,7 +65,7 @@ export default async function whatsapp({ view }) {
           ${d.waiting.length ? `<ul class="list">${d.waiting.slice(0, 8).map((o) => `
             <li>${Avatar(o.customer_name, 38)}
               <a class="list__main" href="/admin/orders/${o.id}"><strong>${esc(o.customer_name)}</strong><small>${esc(o.number)} · ${inr(o.total)} · ${ago(o.created_at)}</small></a>
-              ${o.payment_status !== 'paid' ? pill('pending', 'Unpaid') : pill('photos_pending', 'Photos')}
+              ${o.payment_status !== 'confirmed' ? pill('pending', 'Payment pending') : pill('photos_pending', 'Photos')}
               <a class="wa-btn" href="${esc(o.chat)}" data-wa-name="${esc(o.customer_name)}" aria-label="Chat with ${esc(o.customer_name)}">${icon('whatsapp')}</a></li>`).join('')}</ul>`
             : emptyState('All caught up', 'No orders are waiting for a conversation.', '', 'check')}
         </section>
@@ -100,7 +102,9 @@ export default async function whatsapp({ view }) {
     }
     if (b.matches('[data-test]')) {
       const n = view.querySelector('#w-num').value.replace(/\D/g, '');
-      toast(n.length >= 10 ? `Demo: a test message would be sent to +${n}.` : 'Enter a valid WhatsApp number first.', n.length >= 10 ? 'success' : 'error');
+      if (n.length < 10) { toast('Enter a valid WhatsApp number first.', 'error'); return; }
+      window.open(`https://wa.me/${n}?text=${encodeURIComponent(fill(drafts.whatsapp_template))}`, '_blank', 'noopener');
+      toast(`Opened WhatsApp with a sample order message to +${n}.`);
     }
   });
   tplForm.addEventListener('submit', async (e) => {

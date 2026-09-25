@@ -1,0 +1,110 @@
+/* =========================================================
+   Sanskriti Art — mobile bottom navigation (phones only)
+   Home · Shop · Custom · Cart · Account. Hidden from 768px up,
+   where the existing header navigation takes over unchanged.
+   ========================================================= */
+.bnav { display: none; }
+
+@media (max-width: 767.98px) {
+  :root { --bnav-h: 66px; }
+
+  .bnav {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 45;                         /* above feathers & petals (-1), below the header (50) and page veil (90) */
+    display: block;
+    padding: 6px max(8px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
+    border-top: 1px solid rgba(180, 138, 71, 0.2);
+    border-radius: 22px 22px 0 0;
+    background: rgba(253, 249, 244, 0.96);
+    box-shadow: 0 -12px 30px -22px rgba(63, 12, 24, 0.4);
+    transition: padding .25s var(--ease-out);
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .bnav { background: rgba(253, 249, 244, 0.88); -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1); }
+  }
+  .bnav__list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin: 0 auto;
+    padding: 0;
+    max-width: 480px;
+    list-style: none;
+  }
+  .bnav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-height: 54px;
+    padding: 2px 0;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+    -webkit-tap-highlight-color: transparent;
+    transition: color .2s, transform .15s ease;
+  }
+  .bnav__item:active { transform: scale(0.96); }
+  .bnav__item:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; border-radius: 14px; }
+
+  /* icon sits on a soft blush disc when active */
+  .bnav__icon {
+    position: relative;
+    display: grid; place-items: center;
+    width: 44px; height: 34px;
+    border-radius: 999px;
+    transition: background-color .25s, width .25s var(--ease-out), height .25s var(--ease-out);
+  }
+  .bnav__icon svg {
+    width: 23px; height: 23px;
+    fill: none; stroke: currentColor; stroke-width: 1.45; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .bnav__icon .bnav__fill { fill: transparent; transition: fill .2s; }
+  .bnav__label { transition: opacity .2s, max-height .25s var(--ease-out); max-height: 16px; }
+
+  .bnav__item.is-active { color: var(--wine); font-weight: 500; }
+  .bnav__item.is-active .bnav__icon { background: #f5e1dc; }
+  .bnav__item.is-active .bnav__fill { fill: currentColor; }
+
+  /* cart badge: only when the cart has items */
+  .bnav__badge {
+    position: absolute;
+    top: -1px; right: 2px;
+    display: grid; place-items: center;
+    min-width: 18px; height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    border: 1.5px solid var(--ivory-2);
+    background: var(--wine);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .bnav__badge[data-count="0"] { display: none; }
+  .bnav__badge.is-bumped { animation: bnav-bump .32s var(--ease-out); }
+
+  /* fast scroll down: the bar tucks into a compact strip, and returns as scrolling settles or reverses */
+  .bnav.is-compact { padding-top: 3px; padding-bottom: calc(3px + env(safe-area-inset-bottom)); }
+  .bnav.is-compact .bnav__item { min-height: 40px; }
+  .bnav.is-compact .bnav__icon { height: 30px; }
+  .bnav.is-compact .bnav__label { opacity: 0; max-height: 0; }
+
+  /* keep content clear of the bar */
+  .site-footer { padding-bottom: calc(30px + var(--bnav-h) + env(safe-area-inset-bottom)); }
+  .hero { padding-bottom: calc(42px + var(--bnav-h)); }
+  html { scroll-padding-bottom: calc(var(--bnav-h) + env(safe-area-inset-bottom)); }
+}
+
+@keyframes bnav-bump {
+  0% { transform: scale(0.6); opacity: .4; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bnav, .bnav__item, .bnav__icon, .bnav__label { transition: none; }
+  .bnav__badge.is-bumped { animation: none; }
+}

@@ -1,11 +1,11 @@
 /**
  * First-run seed: imports the catalogue that was already on the storefront
- * (6 categories, 18 products, their images) so the shop keeps working the moment
- * the database is created. It runs only when the categories table is empty.
- * Stock starts at 10 per product. Adjust it in Admin → Inventory.
- * No customers, orders, payments or reviews are ever seeded.
+ * (6 categories, 18 products, their bundled images) into Supabase, so the shop
+ * keeps working the moment the database is created. It runs only when the
+ * categories table is empty. Stock starts at 10 per product (adjust it in
+ * Admin → Inventory). No customers, orders, payments or reviews are ever seeded.
  */
-import { one, run, tx } from './db.js';
+import { sb } from './supabase.js';
 
 const CATALOGUE = [
   ['photo-gifts', 'Photo Gifts', 'Personalised memories', 'Heart-shaped resin frame holding a family photograph among preserved flowers', [
@@ -40,23 +40,17 @@ const CATALOGUE = [
   ]],
 ];
 
-export function seedIfEmpty() {
-  if (one('SELECT id FROM categories LIMIT 1')) return false;
-  tx(() => {
-    CATALOGUE.forEach(([slug, name, desc, alt, products], ci) => {
-      const cat = run(`INSERT INTO categories (name, slug, description, image_url, image_alt, sort_order)
-        VALUES (?, ?, ?, ?, ?, ?)`, name, slug, desc, `/assets/images/categories/${slug}.webp`, alt, ci);
-      products.forEach(([pslug, pname, price, pdesc, custom], pi) => {
-        const p = run(`INSERT INTO products (category_id, name, slug, short_description, price, stock, sort_order,
-            custom_available, custom_type, custom_instructions, whatsapp_required)
-          VALUES (?, ?, ?, ?, ?, 10, ?, 1, ?, ?, ?)`,
-          cat.lastInsertRowid, pname, pslug, pdesc, price, pi, custom,
-          custom === 'photo' ? "You'll share your photo with our team on WhatsApp after ordering." : '',
-          custom === 'photo' ? 1 : 0);
-        run('INSERT INTO product_images (product_id, url, alt, sort_order) VALUES (?, ?, ?, 0)',
-          p.lastInsertRowid, `/assets/images/products/${pslug}.webp`, pname);
-      });
-    });
-  });
+export async function seedIfEmpty() {
+  if (await sb.one('categories', { select: 'id' })) return false;
+  const cats = await sb.insert('categories', CATALOGUE.map(([slug, name, description, alt], i) => ({
+    name, slug, description, image_url: `/assets/images/categories/${slug}.webp`, image_alt: alt, sort_order: i,
+  })));
+  const idOf = Object.fromEntries(cats.map((c) => [c.slug, c.id]));
+  const products = await sb.insert('products', CATALOGUE.flatMap(([cslug, , , , list]) => list.map(([slug, name, price, desc, custom], i) => ({
+    category_id: idOf[cslug], name, slug, short_description: desc, price, stock: 10, sort_order: i,
+    custom_available: 1, custom_type: custom, whatsapp_required: custom === 'photo' ? 1 : 0,
+    custom_instructions: custom === 'photo' ? "You'll share your photo with our team on WhatsApp after ordering." : '',
+  }))));
+  await sb.insert('product_images', products.map((p) => ({ product_id: p.id, url: `/assets/images/products/${p.slug}.webp`, alt: p.name, sort_order: 0 })), { select: 'id' });
   return true;
 }

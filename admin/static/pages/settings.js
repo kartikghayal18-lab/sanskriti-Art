@@ -1,4 +1,4 @@
-import { api, esc, icon, PageHeader, ImageUploader, uploadImage, toast, toastError, errorState, setDirty, setQuery, refreshBadges, confirmBox, resetDemo, applyAppearance, navigate } from '../app.js';
+import { api, esc, icon, PageHeader, ImageUploader, uploadImage, toast, toastError, errorState, setDirty, setQuery, refreshBadges, confirmBox, applyAppearance, uploaderFor } from '../app.js';
 
 const SECTIONS = [['store', 'Store Information', 'store'], ['contact', 'Contact', 'phone'], ['social', 'Social Links', 'link'], ['orders', 'Order Settings', 'orders'],
   ['shipping', 'Shipping', 'truck'], ['notifications', 'Notifications', 'bell'], ['appearance', 'Appearance', 'palette'], ['account', 'Account', 'customers']];
@@ -78,14 +78,10 @@ export default async function settings({ view, query }) {
           <div class="field"><label for="a-email">Email</label><input id="a-email" value="${esc(me.admin.email)}" disabled></div></div>
         <h3 class="subhead">Change password</h3>
         <div class="fields-2"><div class="field"><label for="p-cur">Current password</label><input id="p-cur" name="current" type="password" autocomplete="current-password"></div>
-          <div class="field"><label for="p-new">New password</label><input id="p-new" name="next" type="password" autocomplete="new-password" minlength="10"><span class="hint">At least 10 characters.</span></div></div>
-        <hr class="divider">
-        <h3 class="subhead">Demo data</h3>
-        <p class="muted" style="margin:0">This admin is running on demo data kept in this browser. Resetting brings back the original sample products, orders and customers.</p>
-        <div><button class="btn btn--danger btn--sm" type="button" data-reset-demo>${icon('refresh')} Reset demo data</button></div>`,
+          <div class="field"><label for="p-new">New password</label><input id="p-new" name="next" type="password" autocomplete="new-password" minlength="10"><span class="hint">At least 10 characters. Other devices are signed out.</span></div></div>`,
     };
     panel.innerHTML = `<form class="fields" data-form novalidate>${forms[tab]}${save}</form>`;
-    if (tab === 'store') ImageUploader(panel.querySelector('[data-logo]'), { images: logo, single: true, upload: uploadImage, altText: false, onChange: (l) => { logo = l; markDirty(); } });
+    if (tab === 'store') ImageUploader(panel.querySelector('[data-logo]'), { images: logo, single: true, upload: uploaderFor('logo'), altText: false, onChange: (l) => { logo = l; markDirty(); } });
   };
 
   view.addEventListener('click', async (e) => {
@@ -94,10 +90,6 @@ export default async function settings({ view, query }) {
     if (t.matches('[data-tab]') && t.dataset.tab !== tab) {
       if (dirty && !(await confirmBox({ title: 'Discard changes?', message: 'You have unsaved changes in this section.', confirm: 'Discard', danger: true }))) return;
       tab = t.dataset.tab; render();
-    }
-    if (t.matches('[data-reset-demo]')) {
-      if (!(await confirmBox({ title: 'Reset demo data?', message: 'All changes you made in this browser (products, orders, content) go back to the original sample data.', confirm: 'Reset', danger: true }))) return;
-      resetDemo(); setDirty(false); toast('Demo data reset.'); refreshBadges(); navigate('/admin/dashboard');
     }
   });
   view.addEventListener('input', (e) => {
@@ -119,7 +111,7 @@ export default async function settings({ view, query }) {
         if (f.next.value) {
           await api('POST', '/password', { current: f.current.value, next: f.next.value });
           f.current.value = ''; f.next.value = '';
-          toast('Demo: the password change would be saved in Phase 2.');
+          toast('Password changed.');
         }
         me = await api('GET', '/me'); refreshBadges();
         toast('Account updated.');

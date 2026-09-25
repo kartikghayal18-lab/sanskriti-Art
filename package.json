@@ -2,7 +2,7 @@
   "name": "sanskriti-art",
   "private": true,
   "version": "1.0.0",
-  "description": "Sanskriti Art storefront, admin panel and API (Node + SQLite, no dependencies)",
+  "description": "Sanskriti Art storefront, admin panel and API (Node + Supabase + Cloudinary, no dependencies)",
   "type": "module",
   "engines": { "node": ">=22.13" },
   "scripts": {

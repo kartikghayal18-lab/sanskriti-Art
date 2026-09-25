@@ -77,62 +77,6 @@ function heroHtml(c) {
           </div>`;
 }
 
-const ORNAMENT = `<svg class="ornament" viewBox="0 0 120 14" aria-hidden="true">
-            <path d="M2 7h44M74 7h44" />
-            <path d="M60 1.5c3.2 2.4 3.2 8.6 0 11-3.2-2.4-3.2-8.6 0-11Z" />
-            <circle cx="60" cy="7" r="1.6" />
-          </svg>`;
-const head = (c, id) => `<p class="eyebrow eyebrow--center">${h(c.eyebrow)}</p>
-          <h2 class="section-title" id="${id}">${h(c.title)} <em>${h(c.title_accent)}</em></h2>
-          ${ORNAMENT}
-          <p class="section-lede">${h(c.lede)}</p>`;
-
-const PROCESS_IMAGES = [
-  ['share-your-idea', 'Hands holding a phone showing a family photo'],
-  ['we-design-confirm', 'Resin heart design with pressed flowers'],
-  ['handcraft-with-love', 'Resin being poured over preserved flowers'],
-  ['deliver-to-you', 'Finished resin heart filled with red flowers'],
-];
-function processSteps(steps) {
-  return `<ol class="psteps">${steps.map((s, i) => {
-    const [img, alt] = PROCESS_IMAGES[i % PROCESS_IMAGES.length];
-    return `
-            <li class="pstep">
-              <span class="pstep__media"><img src="/assets/images/process/${img}.webp" width="320" height="320" loading="lazy" decoding="async" alt="${h(alt)}" /></span>
-              <span class="pstep__text">
-                <span class="pstep__num" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>
-                <h3 class="pstep__title"><span class="visually-hidden">Step ${i + 1}: </span>${h(s.title)}</h3>
-                <p class="pstep__desc">${h(s.text)}</p>
-              </span>
-            </li>`;
-  }).join('')}
-        </ol>`;
-}
-
-const ORDER_ICONS = [
-  '<path d="M7 10V8a5 5 0 0 1 10 0v2"/><path d="M4.5 10h15l-1.2 11h-12.6Z"/><path d="M9.5 14.5c.8 1 1.6 1.5 2.5 1.5s1.7-.5 2.5-1.5"/>',
-  '<path d="M2.5 3.5h2.6l2.3 11.2h11l2.1-8H6.2"/><circle cx="9.5" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/><path d="M13 8v4.5M10.8 10.2h4.4"/>',
-  '<path d="M4 20l1.2-4A8.2 8.2 0 1 1 8.3 19Z"/><path d="M9.3 8.8c.2-.5.5-.5.8-.5h.5c.2 0 .4.1.5.4l.7 1.6c.1.2 0 .4-.1.6l-.5.6c-.1.1-.1.3 0 .5.5.9 1.3 1.7 2.3 2.2.2.1.4.1.5-.1l.6-.7c.2-.2.4-.2.6-.1l1.6.7c.2.1.3.3.3.5v.4c0 .5-.3.9-.8 1.1-.7.3-1.6.3-2.6-.2-1.7-.8-3.1-2.2-3.9-3.9-.4-.9-.5-1.9-.1-2.6Z"/>',
-  '<circle cx="12" cy="12" r="8.5"/><path d="m8.2 12.3 2.6 2.6 5-5.4"/>',
-];
-function orderSteps(steps) {
-  return `<ol class="osteps" style="--steps:${steps.length}">${steps.map((s, i) => `
-            <li class="ostep">
-              <span class="ostep__icon" aria-hidden="true"><svg viewBox="0 0 24 24">${ORDER_ICONS[Math.min(i, ORDER_ICONS.length - 1)]}</svg></span>
-              <span class="ostep__num" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>
-              <h3 class="ostep__title"><span class="visually-hidden">Step ${i + 1}: </span>${h(s.title)}</h3>
-              <p class="ostep__desc">${h(s.text)}</p>
-            </li>`).join('')}
-        </ol>`;
-}
-const orderCta = (c) => `<div class="order__cta">
-          <p class="order__cta-title">${h(c.cta_title)} <em>${h(c.cta_accent)}</em></p>
-          <a class="btn btn--primary btn--lg" href="#next">
-            ${h(c.cta_label)}
-            ${BTN_ARROW}
-          </a>
-        </div>`;
-
 function footerWa(s) {
   const n = String(s.whatsapp_number || '').replace(/\D/g, '');
   const social = [
@@ -157,20 +101,13 @@ function template() {
 const region = (html, name, inner) => html.replace(
   new RegExp(`<!-- sa:${name} -->[\\s\\S]*?<!-- /sa:${name} -->`), () => `<!-- sa:${name} -->${inner}<!-- /sa:${name} -->`);
 
-export function renderStorefront() {
-  const settings = publicSettings();
-  const content = allContent();
-  const catalog = storefrontCatalog();
+export async function renderStorefront() {
+  const [settings, content, catalog] = await Promise.all([publicSettings(), allContent(), storefrontCatalog()]);
   let html = template();
   html = region(html, 'public', `<script>window.SA_PUBLIC = ${safeJson(settings)};</script>
   <script type="application/json" id="sa-catalog">${safeJson(catalog)}</script>`);
   html = region(html, 'hero', heroHtml(content.hero));
   html = region(html, 'catalog', catalogHtml(catalog));
-  html = region(html, 'process-head', head(content.process, 'process-title'));
-  html = region(html, 'process-steps', processSteps(content.process.steps));
-  html = region(html, 'order-head', head(content.how_to_order, 'order-title'));
-  html = region(html, 'order-steps', orderSteps(content.how_to_order.steps));
-  html = region(html, 'order-cta', orderCta(content.how_to_order));
   html = region(html, 'footer-tag', `<p class="site-footer__tag">${h(content.contact.tagline)}</p>`);
   html = region(html, 'footer-wa', footerWa(settings));
   if (settings.store_name) html = html.replace(/<title>[^<]*<\/title>/, `<title>${h(settings.store_name)} — Handmade Resin Art &amp; Preserved Memories</title>`);

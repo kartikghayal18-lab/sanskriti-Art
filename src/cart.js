@@ -45,15 +45,16 @@ window.SACart = (() => {
     form: $('[data-checkout]'), error: $('[data-checkout-error]'),
     done: $('[data-cart-done]'), doneNumber: $('[data-done-number]'), doneWa: $('[data-done-wa]'),
   };
-  const badge = document.querySelector('[data-cart-count]');
+  const badges = document.querySelectorAll('[data-cart-count]');   // header + mobile bottom nav
   const cartLinks = document.querySelectorAll('[data-cart]');
   const announce = document.querySelector('[data-announce]');
   let step = 'cart';   // cart | details | done
 
   const renderBadge = () => {
     const n = count();
-    if (badge) badge.textContent = String(n);
+    badges.forEach((b) => { b.textContent = String(n); b.dataset.count = String(n); });
     cartLinks.forEach((a) => a.setAttribute('aria-label', `Cart, ${n} ${n === 1 ? 'item' : 'items'}`));
+    document.dispatchEvent(new CustomEvent('sa:cartchange', { detail: { count: n } }));
   };
 
   const render = () => {
@@ -148,7 +149,8 @@ window.SACart = (() => {
         body: JSON.stringify({
           customer: {
             name: f.elements.name.value, phone: f.elements.phone.value, email: f.elements.email.value,
-            address: f.elements.address.value, note: f.elements.note.value,
+            address: f.elements.address.value, city: f.elements.city.value, state: f.elements.state.value,
+            pincode: f.elements.pincode.value, note: f.elements.note.value,
           },
           items: items.map((it) => ({
             productId: it.productId, variantId: it.variantId, quantity: it.qty,
