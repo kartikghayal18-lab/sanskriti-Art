@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Sign in · Sanskriti Art Admin</title>
+  <link rel="icon" href="/assets/feathers/peacock-feather.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Allura&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,600&family=Jost:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="/admin/static/admin.css" />
+  <script src="/admin/static/login.js" type="module"></script>
+</head>
+<body class="login-page">
+  <main class="login">
+    <img class="login__feather" src="/assets/feathers/peacock-feather.svg" alt="" width="320" height="820" />
+    <div class="login__card">
+      <div class="brand brand--admin">
+        <img class="brand__feather" src="/assets/feathers/peacock-feather.svg" alt="" width="320" height="820" />
+        <span class="brand__mark">SK</span>
+        <span class="brand__name">Sanskriti Art</span>
+      </div>
+      <h1 class="login__title">Welcome back</h1>
+      <p class="login__sub">Sign in to manage your store.</p>
+      <form class="login__form" data-login novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <p class="form-error" data-error role="alert" hidden></p>
+        <button class="btn btn--primary btn--block" type="submit">Sign in</button>
+      </form>
+      <a class="login__back" href="/">← Back to the shop</a>
+    </div>
+  </main>
+</body>
+</html>

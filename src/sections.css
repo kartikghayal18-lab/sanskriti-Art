@@ -1,0 +1,312 @@
+/* =========================================================
+   Sanskriti Art — Custom Resin Art, How It's Made,
+   and the global rose-petal layer. Mobile-first.
+   ========================================================= */
+
+/* ---------- Shared section heading ---------- */
+.section-head { max-width: 36ch; margin: 0 auto 30px; text-align: center; }
+.section-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.1rem, 9vw, 2.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--wine-deep);
+}
+.section-title em { font-style: italic; color: var(--bronze); }
+.ornament {
+  display: block;
+  width: 104px; height: 12px;
+  margin: 12px auto;
+  fill: none; stroke: var(--gold); stroke-width: 1; stroke-linecap: round;
+}
+.ornament circle { fill: var(--gold); stroke: none; }
+.section-lede { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+.sprig { position: absolute; stroke: var(--gold); stroke-width: 1; stroke-opacity: .3; fill: none; }
+.br-lg { display: none; }
+
+/* ---------- Global rose petals (src/petals.js) ---------- */
+.petal-layer {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.rose-petal {
+  position: absolute;
+  left: 0; top: 0;
+  height: auto;
+  opacity: 0;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  user-select: none;
+}
+.rose-petal--back { filter: blur(1.1px); }
+.rose-petal--front { filter: drop-shadow(0 6px 6px rgba(63, 12, 24, 0.14)); }
+
+/* =========================================================
+   Custom Resin Art
+   ========================================================= */
+.custom {
+  position: relative;
+  padding: 36px 0 60px;
+}
+.custom__bg { position: absolute; inset: 0; z-index: -2; background: var(--ivory-2); overflow: hidden; }
+.custom__panel { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.custom__sprig { width: 120px; right: -20px; bottom: 30px; transform: scaleX(-1); }
+.custom__float,
+.process__float { position: absolute; inset: 0; pointer-events: none; }
+
+.custom__inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+.custom__media {
+  margin: 0 auto;
+  max-width: 440px;
+}
+.custom__media img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 924 / 876;
+  object-fit: cover;
+  /* organic, softly dissolving edge — like the reference's oval vignette */
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 70%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 70%, transparent 100%);
+}
+.custom__content {
+  position: relative;
+  margin-top: 6px;
+  text-align: center;
+}
+
+.csteps {
+  list-style: none;
+  margin: 26px auto 28px;
+  padding: 0;
+  max-width: 420px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 12px;
+  counter-reset: cstep;
+}
+.csteps li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.csteps__icon {
+  position: relative;
+  display: grid; place-items: center;
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  border: 1px solid rgba(149, 96, 44, 0.45);
+  background: rgba(252, 244, 238, 0.85);
+  box-shadow: inset 0 0 0 4px rgba(255, 250, 243, 0.9);
+}
+.csteps__icon svg {
+  width: 26px; height: 26px;
+  fill: none; stroke: var(--wine); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round;
+}
+.csteps__icon::after {
+  counter-increment: cstep;
+  content: "0" counter(cstep);
+  position: absolute;
+  top: -4px; right: -8px;
+  min-width: 22px; height: 22px;
+  padding: 0 4px;
+  border-radius: 11px;
+  background: var(--wine);
+  color: #fff8f0;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 22px;
+  text-align: center;
+}
+
+.custom__cta { width: 100%; max-width: 340px; }
+.custom__cta:hover .btn__arrow { transform: translateX(4px); }
+
+/* Feather stops (see scene.js). Centre + width + --rot/--o describe the pose. */
+.float-slot--custom-l { width: 140px; left: -112px; top: 190px; --rot: 62; --o: .95; }
+.float-slot--custom-in { width: 130px; right: -320px; top: 60px; --rot: -70; --o: 0; }
+.float-slot--custom-r {
+  width: 120px; right: -76px;
+  top: calc(36px + min(100vw - 32px, 440px) * .948 - 130px);
+  --rot: -34; --o: .95;
+}
+.feather--travel-2 { width: 130px; --arc: 72; --spin: -14; }
+
+/* =========================================================
+   How It's Made
+   ========================================================= */
+.process {
+  position: relative;
+  padding: 44px 0 72px;
+}
+.process__bg { position: absolute; inset: 0; z-index: -2; background: var(--ivory-2); overflow: hidden; }
+.process__sprig { width: 110px; left: -24px; bottom: 20px; }
+
+.process__inner { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
+
+.psteps {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 460px;
+  display: grid;
+  gap: 22px;
+}
+.pstep {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+/* thin dashed gold thread linking the circles */
+.pstep:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 48px; top: 100px;
+  height: calc(100% - 104px + 22px);
+  border-left: 1px dashed rgba(180, 138, 71, 0.6);
+}
+.pstep__media {
+  display: block;
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #fffaf3;
+  box-shadow: 0 12px 24px -14px rgba(63, 12, 24, 0.45);
+  background: var(--cream);
+}
+.pstep__media img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); }
+.pstep__num {
+  display: inline-grid; place-items: center;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(91, 22, 38, 0.55);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--wine);
+}
+.pstep__title {
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1.1;
+  color: var(--wine-deep);
+}
+.pstep__desc { margin: 5px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+
+.float-slot--process-l { width: 130px; left: -104px; top: -116px; --rot: 100; --o: .95; }
+.float-slot--process-r { width: 120px; right: -84px; bottom: -120px; --rot: -40; --o: .9; --land: .62; }
+
+/* ---------- Tablet ---------- */
+@media (min-width: 600px) {
+  .custom__inner, .process__inner { padding: 0 var(--gutter); }
+}
+@media (min-width: 768px) {
+  .custom { padding: 56px 0 84px; }
+  .section-title { font-size: 3rem; }
+  .section-lede { font-size: 16.5px; }
+  .section-head { margin-bottom: 44px; }
+  .custom__media { max-width: 520px; }
+  .csteps { max-width: none; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; }
+  .csteps li + li { border-left: 1px solid rgba(180, 138, 71, 0.3); }
+  .csteps li { padding: 0 8px; }
+  .float-slot--custom-r { width: 170px; right: -96px; top: calc(56px + 520px * .948 - 150px); }
+  .feather--travel-2 { width: 170px; }
+
+  .process { padding: 64px 0 96px; }
+  .psteps { max-width: 560px; }
+  .float-slot--process-l { width: 180px; left: -130px; top: -140px; }
+  .float-slot--process-r { width: 170px; right: -100px; }
+}
+
+/* ---------- Desktop: image left, content right; steps in one row ---------- */
+@media (min-width: 1024px) {
+  .custom { padding: 56px 0 72px; }
+  .custom__inner {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    align-items: center;
+    gap: 24px;
+  }
+  .custom__media {
+    max-width: none;
+    margin: 0 0 0 calc(var(--gutter) * -1);
+  }
+  .custom__media img {
+    -webkit-mask-image: radial-gradient(ellipse 62% 56% at 40% 50%, #000 66%, transparent 100%);
+    mask-image: radial-gradient(ellipse 62% 56% at 40% 50%, #000 66%, transparent 100%);
+  }
+  .custom__content { margin: 0; padding: 20px 0; }
+  .custom__sprig { width: 200px; right: 0; bottom: 20px; }
+  .csteps { margin: 30px 0 32px; }
+  .csteps__icon { width: 64px; height: 64px; }
+  .custom__cta { width: auto; }
+
+  .float-slot--custom-l { width: 200px; left: -120px; top: 58%; --rot: 48; }
+  .float-slot--custom-r { width: 200px; right: -96px; top: 10px; --rot: -32; }
+  .feather--travel-2 { width: 200px; }
+
+  .process { padding: 56px 0 100px; }
+  .br-lg { display: inline; }
+  .psteps {
+    max-width: none;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 28px;
+  }
+  .pstep { grid-template-columns: none; justify-items: center; text-align: center; gap: 14px; }
+  .pstep__media { width: 132px; height: 132px; }
+  /* connecting line with a small chevron, circle to circle */
+  .pstep:not(:last-child)::after {
+    left: calc(50% + 78px);
+    right: calc(-50% + 64px);
+    top: 66px;
+    height: 0;
+    border-left: 0;
+    border-top: 1px dashed rgba(180, 138, 71, 0.6);
+  }
+  .pstep:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    top: 62px;
+    right: calc(-50% + 64px);
+    width: 8px; height: 8px;
+    border-top: 1.4px solid var(--gold);
+    border-right: 1.4px solid var(--gold);
+    transform: rotate(45deg);
+  }
+  .pstep__text { display: flex; flex-direction: column; align-items: center; }
+  .pstep__title { font-size: 22px; }
+  .pstep__desc { max-width: 24ch; }
+
+  .float-slot--process-l { width: 200px; left: -120px; top: 10px; --rot: 70; }
+  .float-slot--process-r { width: 210px; right: -90px; bottom: -30px; --rot: -36; }
+  .process__sprig { width: 190px; left: 0; bottom: 40px; }
+}
+@media (min-width: 1280px) {
+  .section-title { font-size: 3.5rem; }
+  .pstep__media { width: 150px; height: 150px; }
+  .pstep:not(:last-child)::after { left: calc(50% + 88px); right: calc(-50% + 72px); top: 75px; }
+  .pstep:not(:last-child)::before { top: 71px; right: calc(-50% + 72px); }
+}
+@media (min-width: 1440px) {
+  .float-slot--custom-r { right: -40px; }
+  .float-slot--process-l { left: -60px; }
+  .float-slot--process-r { right: -30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custom__cta .btn__arrow { transition: none; }
+}

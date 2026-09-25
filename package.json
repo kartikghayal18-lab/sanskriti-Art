@@ -1,0 +1,14 @@
+{
+  "name": "sanskriti-art",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sanskriti Art storefront, admin panel and API (Node + SQLite, no dependencies)",
+  "type": "module",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node --no-warnings=ExperimentalWarning server/server.js",
+    "dev": "node --no-warnings=ExperimentalWarning --watch-path=server server/server.js",
+    "create-admin": "node --no-warnings=ExperimentalWarning server/cli.js create-admin",
+    "reset-password": "node --no-warnings=ExperimentalWarning server/cli.js reset-password"
+  }
+}
