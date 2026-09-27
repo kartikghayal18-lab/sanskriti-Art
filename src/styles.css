@@ -157,6 +157,7 @@ button { font: inherit; color: inherit; }
   line-height: 1;
   padding: 4px 26px 4px 0;
   flex-shrink: 0;
+  touch-action: manipulation; /* rapid taps (admin shortcut) shouldn't zoom */
 }
 .brand__mark {
   grid-area: mark;
