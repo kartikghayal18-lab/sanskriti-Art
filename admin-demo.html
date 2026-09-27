@@ -1,0 +1,1912 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Sanskriti Art Admin Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Allura&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  PRESENTATION DEMO ONLY.
+  Self-contained: no backend, no Supabase, no APIs, no auth, no storage.
+  Every name, phone, email and order below is fictional sample data.
+  All edits live in memory and reset when the page is refreshed.
+-->
+<style>
+:root {
+  --ivory: #f8f0e5;
+  --ivory-2: #fcf8f2;
+  --cream: #f1e3d0;
+  --beige: #e6d2b8;
+  --blush: #f7e7e1;
+  --wine: #5b1626;
+  --wine-deep: #3f0c18;
+  --gold: #b48a47;
+  --bronze: #95602c;
+  --champagne: #d8bd8a;
+  --ink: #2c1a18;
+  --ink-soft: #5a4640;
+  --muted: #8a7a72;
+  --line: #eadccb;
+  --card: #fffaf5;
+
+  --ok: #3f6b3a;      --ok-bg: #e8f1e4;
+  --warn: #8a5a12;    --warn-bg: #fbeed5;
+  --bad: #8f1f2c;     --bad-bg: #f9e1e1;
+  --info: #3d4f7a;    --info-bg: #e6eaf5;
+  --violet: #6a3d7a;  --violet-bg: #f1e6f3;
+  --neutral: #6f6660; --neutral-bg: #efe9e3;
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Allura", "Segoe Script", cursive;
+  --font-body: "Jost", "Helvetica Neue", Arial, sans-serif;
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 1px 2px rgba(63,12,24,.04), 0 8px 24px -14px rgba(63,12,24,.22);
+  --shadow-lg: 0 30px 70px -20px rgba(40,8,16,.45);
+  --ease: cubic-bezier(.22,1,.36,1);
+  --sidebar-w: 256px;
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--ivory);
+  -webkit-font-smoothing: antialiased;
+}
+img { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; margin: 0; letter-spacing: .01em; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ---------- Layout ---------- */
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  position: fixed; inset: 0 auto 0 0; z-index: 40;
+  width: var(--sidebar-w);
+  display: flex; flex-direction: column;
+  background: linear-gradient(185deg, var(--wine) 0%, var(--wine-deep) 100%);
+  color: #f3e3d3;
+  transition: transform .35s var(--ease);
+}
+.brand { padding: 26px 24px 20px; border-bottom: 1px solid rgba(216,189,138,.18); }
+.brand-mark { font-family: var(--font-script); font-size: 38px; line-height: 1; color: var(--champagne); }
+.brand-sub { margin-top: 6px; font-size: 10.5px; letter-spacing: .28em; text-transform: uppercase; color: rgba(243,227,211,.6); }
+.nav { flex: 1; overflow-y: auto; padding: 16px 12px; }
+.nav-label { padding: 14px 12px 6px; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: rgba(243,227,211,.45); }
+.nav-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 12px; margin-bottom: 2px;
+  border: 0; border-radius: 10px; background: none;
+  color: rgba(243,227,211,.82); text-align: left; font-size: 14px;
+  transition: background .2s, color .2s;
+}
+.nav-item svg { width: 18px; height: 18px; flex: none; opacity: .85; }
+.nav-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+.nav-item.active { background: linear-gradient(90deg, rgba(216,189,138,.22), rgba(216,189,138,.06)); color: #fff; box-shadow: inset 3px 0 0 var(--champagne); }
+.nav-count { margin-left: auto; min-width: 22px; padding: 1px 7px; border-radius: 20px; background: rgba(216,189,138,.22); color: var(--champagne); font-size: 11px; text-align: center; }
+.sidebar-foot { margin: 12px; padding: 14px 16px; border-radius: 12px; background: rgba(0,0,0,.18); border: 1px solid rgba(216,189,138,.18); font-size: 12px; color: rgba(243,227,211,.75); }
+.sidebar-foot strong { display: block; color: var(--champagne); font-weight: 500; margin-bottom: 2px; }
+
+.main { flex: 1; min-width: 0; margin-left: var(--sidebar-w); display: flex; flex-direction: column; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 28px;
+  background: rgba(248,240,229,.86);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+.icon-btn.menu-btn { display: none; }
+.page-title { flex: 1; }
+.page-title { min-width: 0; }
+.page-title h1 { font-size: 26px; line-height: 1.1; color: var(--wine-deep); }
+.page-title p { margin: 2px 0 0; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+.global-search { position: relative; width: 300px; }
+.global-search input { width: 100%; padding: 9px 14px 9px 38px; border: 1px solid var(--line); border-radius: 30px; background: var(--ivory-2); transition: border-color .2s, box-shadow .2s; }
+.global-search input:focus { outline: none; border-color: var(--champagne); box-shadow: 0 0 0 4px rgba(216,189,138,.25); }
+.global-search > svg { position: absolute; left: 13px; top: 50%; width: 16px; height: 16px; transform: translateY(-50%); color: var(--muted); }
+
+.icon-btn {
+  position: relative; display: inline-grid; place-items: center;
+  width: 38px; height: 38px; flex: none;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--ivory-2); color: var(--ink-soft);
+  transition: background .2s, border-color .2s, transform .2s;
+}
+.icon-btn:hover { background: #fff; border-color: var(--champagne); }
+.icon-btn svg { width: 17px; height: 17px; }
+.dot { position: absolute; top: 7px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--bad); border: 2px solid var(--ivory-2); }
+
+.profile-btn { display: flex; align-items: center; gap: 10px; padding: 4px 10px 4px 4px; border: 1px solid var(--line); border-radius: 30px; background: var(--ivory-2); }
+.profile-btn:hover { border-color: var(--champagne); }
+.profile-btn .who { text-align: left; line-height: 1.2; }
+.profile-btn .who b { display: block; font-weight: 500; font-size: 13px; }
+.profile-btn .who span { font-size: 11px; color: var(--muted); }
+.profile-btn > svg { width: 14px; height: 14px; color: var(--muted); }
+
+.avatar { display: inline-grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: 50%; font-size: 12.5px; font-weight: 600; color: #fff; background: linear-gradient(135deg, var(--gold), var(--bronze)); letter-spacing: .03em; }
+.avatar.lg { width: 64px; height: 64px; font-size: 22px; }
+
+.demo-banner {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  padding: 7px 16px;
+  background: linear-gradient(90deg, #efe0c4, #f5e9d4, #efe0c4);
+  color: var(--bronze); font-size: 12px; letter-spacing: .04em; text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+.demo-banner b { font-weight: 600; letter-spacing: .14em; text-transform: uppercase; font-size: 10.5px; padding: 2px 8px; border-radius: 20px; background: var(--wine); color: var(--champagne); }
+
+#view { padding: 26px 28px 60px; animation: fade .45s var(--ease); }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------- Dropdowns ---------- */
+.dd { position: relative; }
+.dd-menu {
+  position: absolute; right: 0; top: calc(100% + 10px); z-index: 50;
+  min-width: 230px; padding: 6px;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow-lg);
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity .2s, transform .2s var(--ease), visibility .2s;
+}
+.dd.open .dd-menu { opacity: 1; visibility: visible; transform: none; }
+.dd-head { padding: 10px 12px 8px; font-family: var(--font-display); font-size: 18px; color: var(--wine-deep); border-bottom: 1px solid var(--line); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: baseline; }
+.dd-head small { font-family: var(--font-body); font-size: 11px; color: var(--muted); }
+.dd-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border: 0; border-radius: 8px; background: none; text-align: left; font-size: 13px; color: var(--ink); }
+.dd-item:hover { background: var(--ivory); }
+.dd-item svg { width: 16px; height: 16px; color: var(--muted); flex: none; }
+.dd-item .t { font-size: 13px; }
+.dd-item .s { font-size: 11.5px; color: var(--muted); }
+.notif-ic { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; }
+.notif-ic svg { color: inherit; }
+.notif-menu { width: 330px; }
+.search-menu { left: 0; right: 0; min-width: 0; max-height: 420px; overflow-y: auto; }
+.search-menu .dd-item img { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; }
+.search-kind { margin-left: auto; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.search-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* ---------- Cards & grids ---------- */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px 6px; }
+.card-head h3 { font-size: 21px; color: var(--wine-deep); }
+.card-head p { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.card-body { padding: 12px 20px 20px; }
+.link-btn { border: 0; background: none; color: var(--bronze); font-size: 12.5px; font-weight: 500; padding: 4px 0; }
+.link-btn:hover { color: var(--wine); text-decoration: underline; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.stat {
+  position: relative; overflow: hidden; padding: 18px 18px 16px;
+  transition: transform .25s var(--ease), box-shadow .25s;
+}
+.stat:hover { transform: translateY(-3px); box-shadow: 0 16px 34px -18px rgba(63,12,24,.35); }
+.stat::after { content: ""; position: absolute; right: -30px; top: -30px; width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle, rgba(216,189,138,.25), transparent 70%); }
+.stat-top { display: flex; align-items: center; justify-content: space-between; }
+.stat-label { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.stat-ic { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; }
+.stat-ic svg { width: 18px; height: 18px; }
+.stat-value { margin-top: 10px; font-family: var(--font-display); font-size: 34px; font-weight: 600; line-height: 1; color: var(--wine-deep); }
+.stat-foot { margin-top: 8px; font-size: 12px; color: var(--muted); }
+.up { color: var(--ok); font-weight: 500; }
+.down { color: var(--bad); font-weight: 500; }
+.stat.feature { background: linear-gradient(140deg, var(--wine) 0%, var(--wine-deep) 100%); border-color: transparent; color: #f3e3d3; }
+.stat.feature .stat-label, .stat.feature .stat-foot { color: rgba(243,227,211,.7); }
+.stat.feature .stat-value { color: #fff; }
+.stat.feature .up { color: #b7dca9; }
+
+.grid { display: grid; gap: 20px; margin-bottom: 20px; }
+.g-2-1 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.g-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Tone helpers (icon backgrounds, badges) */
+.t-ok { background: var(--ok-bg); color: var(--ok); }
+.t-warn { background: var(--warn-bg); color: var(--warn); }
+.t-bad { background: var(--bad-bg); color: var(--bad); }
+.t-info { background: var(--info-bg); color: var(--info); }
+.t-violet { background: var(--violet-bg); color: var(--violet); }
+.t-neutral { background: var(--neutral-bg); color: var(--neutral); }
+.t-gold { background: #f6ecd8; color: var(--bronze); }
+.t-wine { background: var(--blush); color: var(--wine); }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 500; white-space: nowrap; }
+.badge::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .75; }
+
+/* ---------- Charts ---------- */
+.chart-wrap { position: relative; }
+.chart-wrap svg { width: 100%; height: auto; overflow: visible; }
+.chart-tip {
+  position: absolute; pointer-events: none; z-index: 5;
+  padding: 7px 11px; border-radius: 8px;
+  background: var(--wine-deep); color: #fff; font-size: 12px; white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 12px));
+  opacity: 0; transition: opacity .15s;
+  box-shadow: 0 8px 20px -8px rgba(0,0,0,.4);
+}
+.chart-tip b { display: block; font-size: 14px; font-weight: 600; }
+.chart-tip.show { opacity: 1; }
+.seg-toggle { display: inline-flex; padding: 3px; border-radius: 20px; background: var(--ivory); border: 1px solid var(--line); }
+.seg-toggle button { border: 0; background: none; padding: 4px 12px; border-radius: 20px; font-size: 12px; color: var(--muted); }
+.seg-toggle button.on { background: #fff; color: var(--wine); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+
+.donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 4px; }
+.donut { position: relative; width: 190px; height: 190px; }
+.donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.donut circle { transition: stroke-width .2s; }
+.donut circle:hover { stroke-width: 26; }
+.donut-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.donut-center b { font-family: var(--font-display); font-size: 38px; line-height: 1; color: var(--wine-deep); }
+.donut-center span { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.legend { width: 100%; display: grid; gap: 8px; }
+.legend-row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.legend-row i { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend-row b { margin-left: auto; font-weight: 500; }
+.legend-row small { color: var(--muted); width: 40px; text-align: right; }
+
+.bar-list { display: grid; gap: 13px; }
+.bar-row .bar-meta { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+.bar-row .bar-meta span { color: var(--muted); }
+.bar-track { height: 8px; border-radius: 8px; background: var(--ivory); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--gold), var(--wine)); transform-origin: left; animation: grow .9s var(--ease) both; }
+@keyframes grow { from { transform: scaleX(0); } }
+
+.mini-list { display: grid; gap: 4px; }
+.mini-row { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px; transition: background .2s; cursor: pointer; }
+.mini-row:hover { background: var(--ivory); }
+.mini-row img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; flex: none; }
+.mini-row .grow { flex: 1; min-width: 0; }
+.mini-row .name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-row .sub { font-size: 12px; color: var(--muted); }
+.mini-row .end { text-align: right; font-size: 13px; font-weight: 500; }
+.rank { width: 22px; font-family: var(--font-display); font-size: 20px; color: var(--gold); text-align: center; flex: none; }
+
+/* ---------- Toolbar & tables ---------- */
+.toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.search-field { position: relative; flex: 1 1 240px; max-width: 360px; }
+.search-field svg { position: absolute; left: 12px; top: 50%; width: 15px; height: 15px; transform: translateY(-50%); color: var(--muted); }
+
+.toolbar .spacer { flex: 1; }
+.result-count { font-size: 12px; color: var(--muted); }
+
+.input, .search-field input, .select, textarea.input {
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff;
+  padding: 9px 12px; transition: border-color .2s, box-shadow .2s; width: 100%;
+}
+.search-field input { padding-left: 36px; }
+.select { width: auto; padding-right: 30px; appearance: none; -webkit-appearance: none;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%238a7a72' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 11px center; }
+.input:focus, .search-field input:focus, .select:focus { outline: none; border-color: var(--champagne); box-shadow: 0 0 0 4px rgba(216,189,138,.25); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px 16px; border-radius: var(--radius-sm); border: 1px solid transparent;
+  font-size: 13.5px; font-weight: 500; white-space: nowrap;
+  transition: background .2s, border-color .2s, transform .15s, box-shadow .2s;
+}
+.btn svg { width: 16px; height: 16px; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--wine); color: #fff; box-shadow: 0 10px 22px -12px rgba(63,12,24,.6); }
+.btn-primary:hover { background: var(--wine-deep); }
+.btn-ghost { background: #fff; border-color: var(--line); color: var(--ink-soft); }
+.btn-ghost:hover { border-color: var(--champagne); color: var(--wine); }
+.btn-danger { background: var(--bad); color: #fff; }
+.btn-danger:hover { background: #6f1520; }
+.btn-sm { padding: 6px 11px; font-size: 12.5px; }
+
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 12px 16px; text-align: left; vertical-align: middle; }
+th { font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); background: var(--ivory-2); border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { border-bottom: 1px solid #f1e6d8; }
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: #fdf6ee; }
+tbody tr[data-act] { cursor: pointer; }
+tbody tr:last-child td { border-bottom: 0; }
+.num { text-align: right; white-space: nowrap; }
+.nowrap { white-space: nowrap; }
+.cell-prod { display: flex; align-items: center; gap: 12px; min-width: 200px; }
+.cell-prod img { width: 46px; height: 46px; border-radius: 10px; object-fit: cover; flex: none; border: 1px solid var(--line); }
+.cell-prod b { display: block; font-weight: 500; }
+.cell-prod small, .muted { color: var(--muted); font-size: 12px; }
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; }
+.oid { font-weight: 600; color: var(--wine); white-space: nowrap; }
+.row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+.row-actions button { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--muted); transition: background .15s, color .15s; }
+.row-actions button:hover { background: var(--ivory); color: var(--wine); }
+.row-actions button.del:hover { background: var(--bad-bg); color: var(--bad); }
+.row-actions svg { width: 16px; height: 16px; }
+.clamp { max-width: 280px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.thumb-btn { padding: 0; border: 0; background: none; border-radius: 10px; overflow: hidden; position: relative; }
+.thumb-btn img { width: 52px; height: 52px; object-fit: cover; transition: transform .3s var(--ease); }
+.thumb-btn:hover img { transform: scale(1.08); }
+.empty { padding: 44px 20px; text-align: center; color: var(--muted); }
+
+.stock-ctrl { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.stock-ctrl button { width: 30px; height: 30px; border: 0; background: none; color: var(--ink-soft); display: grid; place-items: center; }
+.stock-ctrl button:hover { background: var(--ivory); color: var(--wine); }
+.stock-ctrl button svg { width: 14px; height: 14px; }
+.stock-ctrl span { min-width: 38px; text-align: center; font-weight: 600; }
+.meter { width: 90px; height: 6px; border-radius: 6px; background: var(--ivory); overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 6px; }
+
+/* ---------- Category / review cards ---------- */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+.cat-card { overflow: hidden; transition: transform .25s var(--ease), box-shadow .25s; }
+.cat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -22px rgba(63,12,24,.45); }
+.cat-card .cover { position: relative; aspect-ratio: 16/10; overflow: hidden; }
+.cat-card .cover img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease); }
+.cat-card:hover .cover img { transform: scale(1.06); }
+.cat-card .cover span { position: absolute; left: 12px; bottom: 12px; padding: 3px 10px; border-radius: 20px; background: rgba(255,250,245,.92); font-size: 12px; font-weight: 500; color: var(--wine); }
+.cat-card .inner { padding: 14px 16px 16px; }
+.cat-card h4 { font-size: 22px; color: var(--wine-deep); }
+.cat-card p { margin: 4px 0 12px; font-size: 12.5px; color: var(--muted); min-height: 38px; }
+.cat-card .foot { display: flex; justify-content: space-between; align-items: center; }
+
+.review-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; padding: 18px; }
+.review { padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: transform .25s var(--ease), box-shadow .25s; }
+.review:hover { transform: translateY(-3px); box-shadow: 0 18px 36px -22px rgba(63,12,24,.4); }
+.review-top { display: flex; align-items: center; gap: 12px; }
+.review-top .grow { flex: 1; min-width: 0; }
+.review-top b { font-weight: 500; display: block; }
+.stars { display: inline-flex; gap: 2px; color: var(--gold); }
+.stars svg { width: 14px; height: 14px; }
+.stars svg.off { color: #e2d5c3; }
+.review-text { margin: 0; font-family: var(--font-display); font-size: 18px; font-style: italic; line-height: 1.4; color: var(--ink-soft); }
+.review-prod { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 10px; background: var(--ivory); font-size: 12.5px; }
+.review-prod img { width: 34px; height: 34px; border-radius: 7px; object-fit: cover; }
+.review-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; }
+
+/* ---------- Modal ---------- */
+.modal-root { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; visibility: hidden; }
+.modal-root.open { visibility: visible; }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(44,26,24,.5); backdrop-filter: blur(3px); opacity: 0; transition: opacity .25s; }
+.modal-root.open .modal-backdrop { opacity: 1; }
+.modal {
+  position: relative; width: 100%; max-width: 560px; max-height: calc(100vh - 32px);
+  display: flex; flex-direction: column;
+  background: var(--card); border-radius: 18px; box-shadow: var(--shadow-lg);
+  opacity: 0; transform: translateY(14px) scale(.98);
+  transition: opacity .25s, transform .3s var(--ease);
+}
+.modal.lg { max-width: 820px; }
+.modal.sm { max-width: 420px; }
+.modal-root.open .modal { opacity: 1; transform: none; }
+.modal > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+.modal > header h3 { font-size: 25px; color: var(--wine-deep); }
+.modal > header .sub { font-size: 12px; color: var(--muted); }
+.modal-body { padding: 20px 22px; overflow-y: auto; }
+.modal > footer { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--ivory-2); border-radius: 0 0 18px 18px; }
+.modal > footer .left { margin-right: auto; }
+
+.detail-grid { display: grid; grid-template-columns: 260px 1fr; gap: 22px; }
+.detail-img { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); cursor: zoom-in; }
+.detail-img img { width: 100%; aspect-ratio: 1; object-fit: cover; transition: transform .5s var(--ease); }
+.detail-img:hover img { transform: scale(1.04); }
+.kv { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px 18px; }
+.kv div span { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.kv div b { font-weight: 500; }
+.kv .full { grid-column: 1 / -1; }
+.price-lg { font-family: var(--font-display); font-size: 32px; font-weight: 600; color: var(--wine); line-height: 1; }
+.section-label { margin: 22px 0 10px; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.quote { margin: 0; padding: 14px 16px; border-left: 3px solid var(--champagne); background: var(--ivory); border-radius: 0 10px 10px 0; font-family: var(--font-display); font-size: 18px; font-style: italic; color: var(--ink-soft); }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.field { display: grid; gap: 6px; }
+.field.full { grid-column: 1 / -1; }
+.field label { font-size: 12px; font-weight: 500; color: var(--ink-soft); }
+.field .select { width: 100%; }
+.upload {
+  display: flex; align-items: center; gap: 16px; padding: 12px;
+  border: 1.5px dashed var(--champagne); border-radius: 12px; background: var(--ivory-2);
+}
+.upload img { width: 84px; height: 84px; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
+.upload .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.upload input[type=file] { display: none; }
+
+.order-items { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.order-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.order-item:last-child { border-bottom: 0; }
+.order-item img { width: 50px; height: 50px; border-radius: 9px; object-fit: cover; }
+.order-item .grow { flex: 1; min-width: 0; }
+.order-total { display: grid; gap: 4px; margin-top: 12px; margin-left: auto; width: 240px; font-size: 13px; }
+.order-total div { display: flex; justify-content: space-between; }
+.order-total .grand { padding-top: 8px; margin-top: 4px; border-top: 1px solid var(--line); font-size: 16px; font-weight: 600; color: var(--wine); }
+
+.timeline { display: flex; margin: 6px 0 4px; }
+.tl-step { flex: 1; position: relative; text-align: center; font-size: 11.5px; color: var(--muted); }
+.tl-step::before { content: ""; position: absolute; top: 11px; left: -50%; right: 50%; height: 2px; background: var(--line); }
+.tl-step:first-child::before { display: none; }
+.tl-step i { position: relative; z-index: 1; display: grid; place-items: center; width: 24px; height: 24px; margin: 0 auto 6px; border-radius: 50%; background: #fff; border: 2px solid var(--line); }
+.tl-step.done { color: var(--ink); }
+.tl-step.done i { background: var(--wine); border-color: var(--wine); }
+.tl-step.done i::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--champagne); }
+.tl-step.done::before { background: var(--wine); }
+.cancel-note { padding: 10px 14px; border-radius: 10px; }
+
+.profile-head { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+.profile-head h4 { font-size: 26px; color: var(--wine-deep); }
+.mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.mini-stat { padding: 12px 14px; border-radius: 12px; background: var(--ivory); }
+.mini-stat span { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.mini-stat b { font-family: var(--font-display); font-size: 24px; font-weight: 600; color: var(--wine-deep); }
+
+/* ---------- Lightbox & toast ---------- */
+.lightbox { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 24px; background: rgba(28,14,12,.86); opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s; cursor: zoom-out; }
+.lightbox.open { opacity: 1; visibility: visible; }
+.lightbox img { max-width: min(640px, 92vw); max-height: 80vh; border-radius: 16px; box-shadow: var(--shadow-lg); transform: scale(.95); transition: transform .3s var(--ease); }
+.lightbox.open img { transform: none; }
+.lightbox p { position: absolute; bottom: 24px; left: 0; right: 0; margin: 0; text-align: center; color: #f3e3d3; font-family: var(--font-display); font-size: 20px; }
+
+.toasts { position: fixed; right: 20px; bottom: 20px; z-index: 130; display: grid; gap: 10px; }
+.toast { display: flex; align-items: center; gap: 10px; min-width: 260px; max-width: 360px; padding: 12px 16px; border-radius: 12px; background: var(--wine-deep); color: #fff; font-size: 13px; box-shadow: var(--shadow-lg); animation: toastIn .35s var(--ease); }
+.toast svg { width: 18px; height: 18px; color: var(--champagne); flex: none; }
+.toast.out { animation: toastOut .3s forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px); } }
+@keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
+
+.scrim { display: none; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1180px) {
+  .g-3 { grid-template-columns: 1fr 1fr; }
+  .g-3 > :last-child { grid-column: 1 / -1; }
+  .global-search { width: 220px; }
+}
+@media (max-width: 980px) {
+  .sidebar { transform: translateX(-100%); }
+  body.nav-open .sidebar { transform: none; box-shadow: var(--shadow-lg); }
+  body.nav-open .scrim { display: block; position: fixed; inset: 0; z-index: 35; background: rgba(44,26,24,.45); }
+  .main { margin-left: 0; }
+  .icon-btn.menu-btn { display: inline-grid; }
+  .g-2-1 { grid-template-columns: 1fr; }
+  .profile-btn .who, .profile-btn > svg { display: none; }
+  .profile-btn { padding: 2px; }
+}
+@media (max-width: 720px) {
+  .topbar { padding: 10px 16px; gap: 10px; flex-wrap: wrap; }
+  .topbar-right { display: contents; }
+  .global-search { order: 5; width: 100%; flex-basis: 100%; }
+  .page-title p { white-space: normal; }
+  .page-title h1 { font-size: 22px; }
+  #view { padding: 18px 16px 50px; }
+  .stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-value { font-size: 26px; }
+  .g-3 { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .detail-img { max-width: 260px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .kv { grid-template-columns: 1fr 1fr; }
+  .mini-stats { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .toolbar { padding: 14px; }
+  .search-field { max-width: none; flex-basis: 100%; }
+  .toolbar .spacer { display: none; }
+  .review-grid { grid-template-columns: 1fr; padding: 14px; }
+  .modal > header, .modal-body, .modal > footer { padding-left: 16px; padding-right: 16px; }
+  .order-total { width: 100%; }
+  .toasts { left: 16px; right: 16px; }
+  .toast { min-width: 0; max-width: none; }
+  .notif-menu { width: calc(100vw - 32px); right: -60px; }
+}
+@media (max-width: 420px) {
+  .stats { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="brand">
+      <div class="brand-mark">Sanskriti Art</div>
+      <div class="brand-sub">Studio Admin</div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-foot">
+      <strong>Presentation demo</strong>
+      Fictional sample data. Nothing here is saved or sent anywhere.
+    </div>
+  </aside>
+  <div class="scrim" data-act="close-nav"></div>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" data-act="open-nav" aria-label="Open menu"><svg data-i="menu"></svg></button>
+      <div class="page-title">
+        <h1 id="pageTitle">Dashboard</h1>
+        <p id="pageSub"></p>
+      </div>
+      <div class="topbar-right">
+        <div class="global-search dd" id="gsearch">
+          <svg data-i="search"></svg>
+          <input id="gsearchInput" type="search" placeholder="Search orders, products, customers…" autocomplete="off" aria-label="Global search">
+          <div class="dd-menu search-menu" id="gsearchMenu"></div>
+        </div>
+        <div class="dd" id="notifDd">
+          <button class="icon-btn" data-act="toggle-dd" data-id="notifDd" aria-label="Notifications"><svg data-i="bell"></svg><span class="dot"></span></button>
+          <div class="dd-menu notif-menu" id="notifMenu"></div>
+        </div>
+        <div class="dd" id="profileDd">
+          <button class="profile-btn" data-act="toggle-dd" data-id="profileDd" aria-label="Account menu">
+            <span class="avatar">SA</span>
+            <span class="who"><b>Studio Owner</b><span>Demo admin</span></span>
+            <svg data-i="chevron"></svg>
+          </button>
+          <div class="dd-menu">
+            <div class="dd-head">Studio Owner <small>demo@example.com</small></div>
+            <button class="dd-item" data-act="nav" data-id="dashboard"><svg data-i="grid"></svg>Dashboard</button>
+            <button class="dd-item" data-act="export-orders"><svg data-i="download"></svg>Export orders (CSV)</button>
+            <button class="dd-item" data-act="reset-demo"><svg data-i="refresh"></svg>Reset demo data</button>
+            <button class="dd-item" data-act="fake-logout"><svg data-i="logout"></svg>Sign out</button>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="demo-banner"><b>Demo</b> Sample data for client presentation. Changes are kept in this tab only and reset on refresh.</div>
+    <main id="view"></main>
+  </div>
+</div>
+
+<div class="modal-root" id="modalRoot"></div>
+<div class="lightbox" id="lightbox" data-act="close-lightbox"><img alt=""><p></p></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+"use strict";
+
+/* =========================================================
+   Helpers
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const inr = (n) => "₹" + Math.round(Number(n) || 0).toLocaleString("en-IN");
+const fmtDate = (d) => new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+const today = () => new Date().toISOString().slice(0, 10);
+const initials = (name) => String(name).trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+const norm = (s) => String(s ?? "").toLowerCase();
+const matches = (q, ...fields) => !q || fields.some((f) => norm(f).includes(norm(q)));
+
+const ICONS = {
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
+  bag: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  box: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  sparkle: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  star: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  tag: '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+  search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  menu: '<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  minus: '<line x1="5" y1="12" x2="19" y2="12"/>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+  trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  upload: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  trend: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  alert: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  check: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  mail: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+  phone: '<rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+  logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>',
+  chevron: '<polyline points="6 9 12 15 18 9"/>',
+  rupee: '<path d="M6 3h12"/><path d="M6 8h12"/><path d="M6 13l8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.67 0 6.67-10 0-10"/>',
+  truck: '<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
+  image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+};
+const icon = (n, cls = "") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ""}</svg>`;
+const hydrateIcons = (root = document) => $$("svg[data-i]", root).forEach((s) => { s.outerHTML = icon(s.dataset.i); });
+
+/* =========================================================
+   Procedural resin-art images (inline SVG, no network needed)
+   ========================================================= */
+const PALETTES = [
+  { bg: ["#f7e7e1", "#e7c3b8"], resin: ["#fbe3ec", "#c98aa6"], flower: "#b23a5e", leaf: "#6d8a5a" }, // rose
+  { bg: ["#e4eef3", "#b5cfdc"], resin: ["#a9dcef", "#1f6f94"], flower: "#ffffff", leaf: "#d9f0f8" }, // ocean
+  { bg: ["#f3ecdc", "#e0cb9f"], resin: ["#fff4d6", "#d9b56b"], flower: "#e98f3c", leaf: "#7c9a5b" }, // amber
+  { bg: ["#efe6f3", "#d3bee0"], resin: ["#ecdcf5", "#8c62a8"], flower: "#6a3d7a", leaf: "#8aa36e" }, // lavender
+  { bg: ["#e6efe6", "#bfd4bc"], resin: ["#e6f2df", "#6f9a6a"], flower: "#fdfaf0", leaf: "#3e6b44" }, // sage
+  { bg: ["#f5e3d6", "#d9b396"], resin: ["#fbe4cf", "#b7643e"], flower: "#8f1f2c", leaf: "#c9a567" }, // terracotta
+];
+
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function flowerSvg(x, y, r, col, rot) {
+  let petals = "";
+  for (let i = 0; i < 5; i++) petals += `<ellipse cx="0" cy="${-r * 0.62}" rx="${r * 0.42}" ry="${r * 0.62}" transform="rotate(${i * 72})" fill="${col}" opacity=".92"/>`;
+  return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot.toFixed(0)})">${petals}<circle r="${r * 0.28}" fill="#d9a93b"/></g>`;
+}
+function inclusions(rand, p, box, count) {
+  const [x0, y0, x1, y1] = box;
+  let out = "";
+  for (let i = 0; i < count; i++) {
+    const x = x0 + rand() * (x1 - x0), y = y0 + rand() * (y1 - y0);
+    out += `<ellipse cx="${(x + 10).toFixed(1)}" cy="${(y + 8).toFixed(1)}" rx="11" ry="4.5" fill="${p.leaf}" transform="rotate(${(rand() * 180).toFixed(0)} ${(x + 10).toFixed(1)} ${(y + 8).toFixed(1)})" opacity=".85"/>`;
+    out += flowerSvg(x, y, 10 + rand() * 12, p.flower, rand() * 90);
+  }
+  for (let i = 0; i < count * 3; i++) {
+    const x = x0 + rand() * (x1 - x0), y = y0 + rand() * (y1 - y0), s = 2 + rand() * 5;
+    out += `<polygon points="${x},${y} ${x + s},${y + s * 0.4} ${x + s * 0.3},${y + s}" fill="#d4a940" opacity=".9"/>`;
+  }
+  return out;
+}
+function teardrop(x, y, s) {
+  return `M${x} ${y - 70 * s} C${x + 55 * s} ${y - 10 * s} ${x + 50 * s} ${y + 60 * s} ${x} ${y + 60 * s} C${x - 50 * s} ${y + 60 * s} ${x - 55 * s} ${y - 10 * s} ${x} ${y - 70 * s}Z`;
+}
+
+const artCache = new Map();
+function art(kind, pal = 0, seed = 1, letter = "") {
+  const key = [kind, pal, seed, letter].join("|");
+  if (artCache.has(key)) return artCache.get(key);
+  const p = PALETTES[pal % PALETTES.length];
+  const rand = rng(seed * 9973 + pal * 31);
+  let shape = "", extra = "", under = "", box = [80, 80, 320, 320], n = 7;
+  const gold = "#c9a14f";
+
+  switch (kind) {
+    case "earrings":
+      shape = `<path d="${teardrop(135, 215, 1)}"/><path d="${teardrop(265, 215, 1)}"/>`;
+      extra = `<path d="M135 145 v-30 a18 18 0 1 1 18 -18" fill="none" stroke="${gold}" stroke-width="4"/><path d="M265 145 v-30 a18 18 0 1 1 18 -18" fill="none" stroke="${gold}" stroke-width="4"/><circle cx="135" cy="145" r="6" fill="${gold}"/><circle cx="265" cy="145" r="6" fill="${gold}"/>`;
+      box = [85, 150, 315, 270]; n = 6; break;
+    case "coaster":
+      under = `<circle cx="222" cy="222" r="128" fill="${p.resin[1]}" opacity=".35"/><circle cx="210" cy="212" r="128" fill="${p.resin[1]}" opacity=".45"/>`;
+      shape = `<circle cx="196" cy="196" r="128"/>`;
+      extra = `<circle cx="196" cy="196" r="126" fill="none" stroke="${gold}" stroke-width="5"/>`;
+      n = 8; break;
+    case "bookmark":
+      shape = `<rect x="148" y="40" width="104" height="320" rx="16"/>`;
+      extra = `<circle cx="200" cy="66" r="8" fill="#fff" stroke="${gold}" stroke-width="3"/><path d="M200 58 C190 30 230 20 216 0" fill="none" stroke="${p.flower}" stroke-width="4"/>`;
+      box = [140, 80, 240, 350]; n = 6; break;
+    case "keychain":
+      shape = `<rect x="120" y="150" width="160" height="190" rx="40"/>`;
+      extra = `<circle cx="200" cy="108" r="30" fill="none" stroke="${gold}" stroke-width="6"/><rect x="194" y="134" width="12" height="22" rx="4" fill="${gold}"/>` +
+        (letter ? `<text x="200" y="272" text-anchor="middle" font-family="Georgia, serif" font-size="96" font-style="italic" fill="#fff" stroke="${gold}" stroke-width="2">${esc(letter)}</text>` : "");
+      box = [115, 160, 270, 330]; n = letter ? 3 : 6; break;
+    case "frame":
+      under = `<rect x="80" y="60" width="240" height="290" rx="10" fill="${p.resin[1]}" opacity=".25" transform="translate(10 10)"/>`;
+      shape = `<rect x="80" y="60" width="240" height="290" rx="10"/>`;
+      extra = `<rect x="122" y="104" width="156" height="200" rx="4" fill="#dfe9f1"/><circle cx="240" cy="150" r="16" fill="#f7d58c"/><path d="M122 304 L122 250 L170 200 L210 245 L240 215 L278 260 L278 304Z" fill="#8fae88"/><path d="M122 304 L122 272 L180 240 L278 285 L278 304Z" fill="#6f9368"/><rect x="122" y="104" width="156" height="200" rx="4" fill="none" stroke="${gold}" stroke-width="3"/>`;
+      box = [80, 60, 320, 350]; n = 7; break;
+    case "block":
+      shape = `<path d="M110 150 L200 110 L300 150 L300 300 L210 340 L110 300Z"/>`;
+      extra = `<path d="M110 150 L210 190 L300 150 M210 190 L210 340" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="3"/>`;
+      box = [110, 130, 290, 320]; n = 9; break;
+    case "pendant":
+      extra = `<path d="M110 40 Q200 170 290 40" fill="none" stroke="${gold}" stroke-width="3" stroke-dasharray="2 5"/><rect x="190" y="118" width="20" height="22" rx="6" fill="${gold}"/>`;
+      shape = `<path d="${teardrop(200, 250, 1.35)}"/>`;
+      if (letter) extra += `<text x="200" y="285" text-anchor="middle" font-family="Georgia, serif" font-size="92" font-style="italic" fill="#fff" stroke="${gold}" stroke-width="2">${esc(letter)}</text>`;
+      box = [135, 170, 265, 320]; n = letter ? 3 : 6; break;
+    case "clip":
+      shape = `<rect x="60" y="160" width="280" height="84" rx="42"/>`;
+      extra = `<rect x="80" y="236" width="240" height="10" rx="5" fill="${gold}"/>`;
+      box = [65, 160, 330, 240]; n = 6; break;
+    case "tray":
+      under = `<ellipse cx="200" cy="232" rx="158" ry="108" fill="${p.resin[1]}" opacity=".35"/>`;
+      shape = `<path d="M60 205 C60 120 340 120 340 205 C340 290 60 290 60 205Z"/>`;
+      extra = `<path d="M60 205 C60 120 340 120 340 205 C340 290 60 290 60 205Z" fill="none" stroke="${gold}" stroke-width="6"/>`;
+      box = [70, 140, 320, 270]; n = 8; break;
+    case "heart":
+      shape = `<path d="M200 330 C80 250 60 170 110 130 C150 100 190 120 200 150 C210 120 250 100 290 130 C340 170 320 250 200 330Z"/>`;
+      extra = `<path d="M200 330 C80 250 60 170 110 130 C150 100 190 120 200 150 C210 120 250 100 290 130 C340 170 320 250 200 330Z" fill="none" stroke="${gold}" stroke-width="4"/>`;
+      box = [90, 120, 300, 300]; n = 6; break;
+    case "photo": {
+      // Represents a customer-uploaded reference photo
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${p.bg[1]}"/><stop offset="1" stop-color="#fbe6cf"/></linearGradient></defs><rect width="400" height="400" fill="url(#s)"/><circle cx="${260 + seed * 7 % 60}" cy="120" r="46" fill="#fff4d8" opacity=".95"/><path d="M0 300 Q100 230 200 280 T400 260 V400 H0Z" fill="${p.leaf}" opacity=".8"/><path d="M0 340 Q120 290 240 330 T400 320 V400 H0Z" fill="${p.resin[1]}" opacity=".75"/><g fill="#3a2a28" opacity=".85"><circle cx="175" cy="228" r="16"/><path d="M152 300 q23 -60 46 0Z"/><circle cx="222" cy="234" r="14"/><path d="M202 300 q20 -52 40 0Z"/></g><rect x="10" y="10" width="380" height="380" fill="none" stroke="#fff" stroke-width="8" opacity=".7"/></svg>`;
+      const uri = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+      artCache.set(key, uri);
+      return uri;
+    }
+    case "bouquet":
+    default:
+      shape = `<rect x="0" y="0" width="400" height="400"/>`;
+      box = [60, 60, 340, 340]; n = 14; break;
+  }
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+<defs>
+<radialGradient id="bg" cx=".3" cy=".25" r="1"><stop offset="0" stop-color="${p.bg[0]}"/><stop offset="1" stop-color="${p.bg[1]}"/></radialGradient>
+<linearGradient id="rs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${p.resin[0]}"/><stop offset="1" stop-color="${p.resin[1]}"/></linearGradient>
+<clipPath id="cp">${shape}</clipPath>
+</defs>
+<rect width="400" height="400" fill="url(#bg)"/>
+<ellipse cx="200" cy="372" rx="150" ry="14" fill="#000" opacity=".07"/>
+${under}
+<g clip-path="url(#cp)">
+<rect width="400" height="400" fill="url(#rs)"/>
+${inclusions(rand, p, box, n)}
+<ellipse cx="150" cy="120" rx="160" ry="60" fill="#fff" opacity=".22" transform="rotate(-25 150 120)"/>
+</g>
+${extra}
+</svg>`;
+  const uri = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  artCache.set(key, uri);
+  return uri;
+}
+
+/* =========================================================
+   Demo data (all fictional)
+   ========================================================= */
+const CATEGORY_KIND = { Earrings: "earrings", Keychains: "keychain", Coasters: "coaster", Bookmarks: "bookmark", "Photo Frames": "frame", Jewellery: "pendant", "Custom Gifts": "heart", "Home Decor": "tray" };
+
+function seedData() {
+  const categories = [
+    { id: "c1", name: "Earrings", desc: "Lightweight resin drops and hoops with real pressed petals.", pal: 0 },
+    { id: "c2", name: "Keychains", desc: "Personalised name and initial keychains, sealed by hand.", pal: 3 },
+    { id: "c3", name: "Coasters", desc: "Ocean, geode and floral coaster sets with gilded rims.", pal: 1 },
+    { id: "c4", name: "Bookmarks", desc: "Pressed-flower bookmarks for readers and gifting.", pal: 4 },
+    { id: "c5", name: "Photo Frames", desc: "Resin frames that hold a favourite photograph.", pal: 2 },
+    { id: "c6", name: "Jewellery", desc: "Pendants, hair clips and statement pieces.", pal: 5 },
+    { id: "c7", name: "Custom Gifts", desc: "Made-to-order keepsakes and memory preservation.", pal: 0 },
+    { id: "c8", name: "Home Decor", desc: "Trinket trays, wall pieces and table accents.", pal: 2 },
+  ];
+
+  const P = (id, name, category, price, stock, status, sku, created, sold, kind, pal, letter = "") =>
+    ({ id, name, category, price, stock, status, sku, created, sold, img: art(kind, pal, Number(id.slice(1)), letter),
+       desc: `Handmade ${name.toLowerCase()} cast in crystal-clear resin with real botanicals and 24k gold-leaf flakes. Each piece is one of a kind.` });
+
+  const products = [
+    P("p1", "Floral Vintage Resin Earrings", "Earrings", 150, 42, "Active", "SA-EAR-001", "2026-03-12", 58, "earrings", 0),
+    P("p2", "Ocean Blue Resin Coaster Set", "Coasters", 899, 18, "Active", "SA-COA-001", "2026-02-04", 31, "coaster", 1),
+    P("p3", "Pressed Flower Bookmark", "Bookmarks", 249, 4, "Active", "SA-BKM-001", "2026-01-22", 44, "bookmark", 4),
+    P("p4", "Custom Name Keychain", "Keychains", 299, 36, "Active", "SA-KEY-001", "2026-01-15", 52, "keychain", 3, "A"),
+    P("p5", "Resin Photo Frame", "Photo Frames", 1299, 3, "Active", "SA-FRM-001", "2026-04-02", 17, "frame", 2),
+    P("p6", "Golden Leaf Resin Pendant", "Jewellery", 499, 0, "Active", "SA-JWL-001", "2026-03-28", 26, "pendant", 2),
+    P("p7", "Floral Resin Hair Clip", "Jewellery", 199, 27, "Active", "SA-JWL-002", "2026-05-06", 21, "clip", 0),
+    P("p8", "Custom Initial Pendant", "Custom Gifts", 599, 12, "Active", "SA-CUS-001", "2026-05-19", 19, "pendant", 3, "K"),
+    P("p9", "Resin Trinket Tray", "Home Decor", 699, 5, "Active", "SA-HOM-001", "2026-06-01", 14, "tray", 5),
+    P("p10", "Memory Preservation Frame", "Custom Gifts", 1499, 2, "Active", "SA-CUS-002", "2026-06-14", 11, "frame", 0),
+    P("p11", "Rose Petal Drop Earrings", "Earrings", 229, 22, "Active", "SA-EAR-002", "2026-06-20", 24, "earrings", 5),
+    P("p12", "Marble Geode Coaster Set", "Coasters", 1099, 0, "Active", "SA-COA-002", "2026-07-03", 9, "coaster", 3),
+    P("p13", "Lavender Bloom Keychain", "Keychains", 179, 1, "Active", "SA-KEY-002", "2026-07-11", 16, "keychain", 3),
+    P("p14", "Gold Flake Hoop Earrings", "Earrings", 349, 15, "Active", "SA-EAR-003", "2026-07-25", 13, "earrings", 2),
+    P("p15", "Daisy Garden Bookmark Duo", "Bookmarks", 399, 9, "Draft", "SA-BKM-002", "2026-08-09", 0, "bookmark", 2),
+    P("p16", "Varmala Preservation Block", "Custom Gifts", 2499, 6, "Active", "SA-CUS-003", "2026-08-21", 7, "block", 0),
+  ];
+
+  const customers = [
+    { id: "u1", name: "Kartik Ghayal", phone: "+91 98000 11201", email: "kartik.g@example.com", city: "Pune", orders: 4, spent: 2184, last: "2026-09-20", since: "2025-11-02" },
+    { id: "u2", name: "Priya Sharma", phone: "+91 98000 11202", email: "priya.sharma@example.com", city: "Mumbai", orders: 6, spent: 5390, last: "2026-09-18", since: "2025-10-14" },
+    { id: "u3", name: "Ananya Patil", phone: "+91 98000 11203", email: "ananya.p@example.com", city: "Nashik", orders: 2, spent: 548, last: "2026-09-22", since: "2026-05-03" },
+    { id: "u4", name: "Riya Mehta", phone: "+91 98000 11204", email: "riya.mehta@example.com", city: "Ahmedabad", orders: 3, spent: 1147, last: "2026-09-14", since: "2026-02-18" },
+    { id: "u5", name: "Neha Joshi", phone: "+91 98000 11205", email: "neha.joshi@example.com", city: "Nagpur", orders: 5, spent: 4296, last: "2026-09-24", since: "2025-12-09" },
+    { id: "u6", name: "Aditi Kulkarni", phone: "+91 98000 11206", email: "aditi.k@example.com", city: "Pune", orders: 4, spent: 2645, last: "2026-09-12", since: "2026-01-27" },
+    { id: "u7", name: "Sneha Deshmukh", phone: "+91 98000 11207", email: "sneha.d@example.com", city: "Kolhapur", orders: 2, spent: 2398, last: "2026-09-11", since: "2026-06-30" },
+    { id: "u8", name: "Meera Iyer", phone: "+91 98000 11208", email: "meera.iyer@example.com", city: "Bengaluru", orders: 3, spent: 2897, last: "2026-09-09", since: "2026-03-15" },
+    { id: "u9", name: "Rohan Verma", phone: "+91 98000 11209", email: "rohan.v@example.com", city: "Delhi", orders: 1, spent: 698, last: "2026-09-07", since: "2026-09-07" },
+    { id: "u10", name: "Ishita Rao", phone: "+91 98000 11210", email: "ishita.rao@example.com", city: "Hyderabad", orders: 2, spent: 3198, last: "2026-09-05", since: "2026-04-21" },
+  ];
+
+  const byId = Object.fromEntries(products.map((p) => [p.id, p]));
+  const cust = Object.fromEntries(customers.map((c) => [c.id, c]));
+  const O = (id, cid, items, payment, status, date, method) => ({
+    id, cid, customer: cust[cid].name, phone: cust[cid].phone, city: cust[cid].city, payment, status, date, method,
+    items: items.map(([pid, qty]) => ({ pid, qty, name: byId[pid].name, price: byId[pid].price, img: byId[pid].img })),
+  });
+
+  const orders = [
+    O("SA-1005", "u5", [["p5", 1]], "Paid", "Processing", "2026-09-24", "UPI"),
+    O("SA-1004", "u4", [["p3", 1]], "Paid", "Delivered", "2026-09-14", "Card"),
+    O("SA-1003", "u3", [["p4", 1]], "Pending", "Pending", "2026-09-22", "COD"),
+    O("SA-1002", "u2", [["p2", 1]], "Paid", "Shipped", "2026-09-18", "UPI"),
+    O("SA-1001", "u1", [["p1", 1]], "Paid", "Processing", "2026-09-20", "UPI"),
+    O("SA-1000", "u6", [["p8", 1], ["p7", 1]], "Paid", "Delivered", "2026-09-12", "Card"),
+    O("SA-0999", "u7", [["p10", 1]], "Paid", "Shipped", "2026-09-11", "UPI"),
+    O("SA-0998", "u8", [["p12", 1]], "Refunded", "Cancelled", "2026-09-09", "Card"),
+    O("SA-0997", "u9", [["p14", 2]], "Paid", "Delivered", "2026-09-07", "UPI"),
+    O("SA-0996", "u10", [["p16", 1]], "Paid", "Delivered", "2026-09-05", "Card"),
+    O("SA-0995", "u2", [["p9", 1]], "Pending", "Shipped", "2026-09-03", "COD"),
+    O("SA-0994", "u1", [["p11", 1], ["p13", 1]], "Paid", "Delivered", "2026-09-01", "UPI"),
+    O("SA-0993", "u5", [["p6", 1]], "Failed", "Pending", "2026-08-30", "Card"),
+    O("SA-0992", "u6", [["p15", 1]], "Paid", "Delivered", "2026-08-28", "UPI"),
+    O("SA-0991", "u8", [["p2", 1]], "Paid", "Delivered", "2026-08-25", "UPI"),
+  ];
+
+  const customOrders = [
+    { id: "CO-206", customer: "Aditi Kulkarni", phone: "+91 98000 11206", request: "Preserve the flowers from my sister's wedding varmala in a square block with the date 12.12.2025 in gold script.", ref: art("bouquet", 0, 61), product: "Varmala Preservation Block", price: 2499, status: "New Request", date: "2026-09-25" },
+    { id: "CO-205", customer: "Neha Joshi", phone: "+91 98000 11205", request: "Photo of my grandparents inside a round frame, with dried marigold petals around the edge.", ref: art("photo", 2, 52), product: "Memory Preservation Frame", price: 1499, status: "Quote Sent", date: "2026-09-23" },
+    { id: "CO-204", customer: "Sameer Khan", phone: "+91 98000 11211", request: "Set of 4 keychains with initials R, S, A, M in lavender resin for a family trip.", ref: art("keychain", 3, 44, "R"), product: "Custom Name Keychain", price: 1196, status: "In Progress", date: "2026-09-19" },
+    { id: "CO-203", customer: "Priya Sharma", phone: "+91 98000 11202", request: "Ocean-theme coaster set of 6 with tiny shells and a white foam edge. Gift wrap please.", ref: art("coaster", 1, 33), product: "Ocean Blue Resin Coaster Set", price: 1349, status: "Ready", date: "2026-09-15" },
+    { id: "CO-202", customer: "Tanvi Bhosale", phone: "+91 98000 11212", request: "Pendant with the letter T and blue forget-me-nots from my garden. Gold chain.", ref: art("pendant", 1, 22, "T"), product: "Custom Initial Pendant", price: 649, status: "Delivered", date: "2026-09-06" },
+    { id: "CO-201", customer: "Meera Iyer", phone: "+91 98000 11208", request: "Family photo from our first trip to the hills in a rectangle frame with pressed ferns.", ref: art("photo", 4, 17), product: "Resin Photo Frame", price: 1399, status: "Delivered", date: "2026-08-29" },
+  ];
+
+  const reviews = [
+    { id: "r1", customer: "Riya Mehta", pid: "p3", rating: 5, text: "The bookmark is even prettier in person. You can see every tiny petal. Packed beautifully too!", date: "2026-09-17", status: "Published" },
+    { id: "r2", customer: "Ishita Rao", pid: "p16", rating: 5, text: "They preserved my wedding flowers perfectly. I cried when I opened the box. Worth every rupee.", date: "2026-09-10", status: "Published" },
+    { id: "r3", customer: "Priya Sharma", pid: "p2", rating: 4, text: "Gorgeous colours and the gold rim looks premium. Delivery took a couple of days extra.", date: "2026-09-21", status: "Pending" },
+    { id: "r4", customer: "Rohan Verma", pid: "p14", rating: 5, text: "Bought two pairs as a gift for my mom and sister. Both loved them. Very lightweight.", date: "2026-09-12", status: "Published" },
+    { id: "r5", customer: "Aditi Kulkarni", pid: "p8", rating: 4, text: "Lovely pendant and the initial is neat. Chain could be slightly longer.", date: "2026-09-15", status: "Pending" },
+    { id: "r6", customer: "Kartik Ghayal", pid: "p11", rating: 5, text: "Rose petals look so real. My friend asked where I got them from within a minute!", date: "2026-09-04", status: "Published" },
+    { id: "r7", customer: "Meera Iyer", pid: "p5", rating: 3, text: "Frame is beautiful, but one corner had a tiny bubble. Support team was quick to respond.", date: "2026-08-31", status: "Hidden" },
+    { id: "r8", customer: "Neha Joshi", pid: "p1", rating: 5, text: "At this price the quality is unbelievable. Already ordered a second pair.", date: "2026-08-27", status: "Published" },
+  ];
+
+  return { categories, products, customers, orders, customOrders, reviews };
+}
+
+let db = seedData();
+const BASE = snapshot();
+const REORDER_LEVEL = 5;
+
+// Store-wide totals shown on the dashboard. The tables hold a recent sample,
+// so these start from fixed demo figures and move with any demo edits.
+const TOTALS = { revenue: 128450, orders: 86, products: 32, customers: 71, pending: 8, completed: 64 };
+function snapshot() {
+  return {
+    orders: db.orders.length, products: db.products.length, customers: db.customers.length,
+    pending: db.orders.filter((o) => o.status === "Pending").length,
+    completed: db.orders.filter((o) => o.status === "Delivered").length,
+    revenue: db.orders.filter((o) => o.payment === "Paid").reduce((s, o) => s + orderTotal(o), 0),
+  };
+}
+function stats() {
+  const now = snapshot();
+  return {
+    revenue: TOTALS.revenue + now.revenue - BASE.revenue,
+    orders: TOTALS.orders + now.orders - BASE.orders,
+    products: TOTALS.products + now.products - BASE.products,
+    customers: TOTALS.customers + now.customers - BASE.customers,
+    pending: TOTALS.pending + now.pending - BASE.pending,
+    completed: TOTALS.completed + now.completed - BASE.completed,
+    lowStock: db.products.filter((p) => stockState(p.stock) === "Low Stock").length,
+  };
+}
+function orderTotal(o) { return o.items.reduce((s, i) => s + i.price * i.qty, 0); }
+function stockState(n) { return n <= 0 ? "Out of Stock" : n <= REORDER_LEVEL ? "Low Stock" : "In Stock"; }
+const product = (id) => db.products.find((p) => p.id === id);
+
+const MONTHLY = [
+  ["Oct", 6850, 5], ["Nov", 8200, 6], ["Dec", 11400, 9], ["Jan", 7900, 5], ["Feb", 9350, 6], ["Mar", 8800, 6],
+  ["Apr", 10150, 7], ["May", 11200, 7], ["Jun", 12450, 8], ["Jul", 12900, 8], ["Aug", 13600, 9], ["Sep", 15650, 10],
+];
+const CATEGORY_SALES = [
+  ["Earrings", 28400], ["Custom Gifts", 24300], ["Coasters", 22150], ["Photo Frames", 19480],
+  ["Jewellery", 13900], ["Keychains", 9870], ["Bookmarks", 5620], ["Home Decor", 4730],
+];
+
+/* =========================================================
+   Badges
+   ========================================================= */
+const TONES = {
+  Paid: "t-ok", Pending: "t-warn", Failed: "t-bad", Refunded: "t-neutral",
+  Processing: "t-info", Shipped: "t-violet", Delivered: "t-ok", Cancelled: "t-bad",
+  Active: "t-ok", Draft: "t-neutral",
+  "In Stock": "t-ok", "Low Stock": "t-warn", "Out of Stock": "t-bad",
+  "New Request": "t-wine", "Quote Sent": "t-gold", "In Progress": "t-info", Ready: "t-violet",
+  Published: "t-ok", Hidden: "t-neutral",
+};
+const badge = (s) => `<span class="badge ${TONES[s] || "t-neutral"}">${esc(s)}</span>`;
+const stars = (n) => `<span class="stars" aria-label="${n} out of 5">${[1, 2, 3, 4, 5].map((i) => icon("star", i <= n ? "" : "off").replace('fill="none"', 'fill="currentColor"')).join("")}</span>`;
+
+const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+const PAY_STATUSES = ["Paid", "Pending", "Failed", "Refunded"];
+const CUSTOM_STATUSES = ["New Request", "Quote Sent", "In Progress", "Ready", "Delivered"];
+const REVIEW_STATUSES = ["Published", "Pending", "Hidden"];
+const opts = (list, sel, all) => (all ? `<option value="">${all}</option>` : "") + list.map((v) => `<option ${v === sel ? "selected" : ""}>${esc(v)}</option>`).join("");
+
+/* =========================================================
+   State & navigation
+   ========================================================= */
+const SECTIONS = [
+  { id: "dashboard", label: "Dashboard", icon: "grid", sub: "Overview of your studio's performance" },
+  { id: "orders", label: "Orders", icon: "bag", sub: "Track, update and fulfil customer orders" },
+  { id: "products", label: "Products", icon: "box", sub: "Manage your handmade catalogue" },
+  { id: "inventory", label: "Inventory", icon: "layers", sub: "Stock levels and reorder alerts" },
+  { id: "custom", label: "Custom Orders", icon: "sparkle", sub: "Personalised requests from customers" },
+  { id: "customers", label: "Customers", icon: "users", sub: "People who love your work" },
+  { id: "reviews", label: "Reviews", icon: "star", sub: "Moderate customer feedback" },
+  { id: "categories", label: "Categories", icon: "tag", sub: "Organise products into collections" },
+];
+
+const state = {
+  section: "dashboard",
+  chart: "revenue",
+  f: {
+    orders: { q: "", status: "", pay: "" },
+    products: { q: "", cat: "", status: "" },
+    inventory: { q: "", stock: "" },
+    custom: { q: "", status: "" },
+    customers: { q: "", sort: "spent" },
+    reviews: { q: "", rating: "", status: "" },
+  },
+};
+
+function renderNav() {
+  const counts = {
+    orders: db.orders.filter((o) => o.status === "Pending" || o.status === "Processing").length,
+    custom: db.customOrders.filter((c) => c.status === "New Request").length,
+    reviews: db.reviews.filter((r) => r.status === "Pending").length,
+    inventory: db.products.filter((p) => p.stock <= REORDER_LEVEL).length,
+  };
+  $("#nav").innerHTML = `<div class="nav-label">Store</div>` + SECTIONS.map((s, i) =>
+    (i === 5 ? `<div class="nav-label">People</div>` : "") +
+    `<button class="nav-item ${state.section === s.id ? "active" : ""}" data-act="nav" data-id="${s.id}">${icon(s.icon)}<span>${s.label}</span>${counts[s.id] ? `<span class="nav-count">${counts[s.id]}</span>` : ""}</button>`
+  ).join("");
+}
+
+function go(section) {
+  if (!SECTIONS.some((s) => s.id === section)) section = "dashboard";
+  state.section = section;
+  const meta = SECTIONS.find((s) => s.id === section);
+  $("#pageTitle").textContent = meta.label;
+  $("#pageSub").textContent = meta.sub;
+  document.title = `${meta.label} · Sanskriti Art Admin Demo`;
+  if (location.hash.slice(1) !== section) history.replaceState(null, "", "#" + section);
+  document.body.classList.remove("nav-open");
+  renderNav();
+  const view = $("#view");
+  view.style.animation = "none"; void view.offsetWidth; view.style.animation = "";
+  view.innerHTML = VIEWS[section].shell();
+  refreshBody();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function refreshBody() {
+  const v = VIEWS[state.section];
+  if (v.body) { const el = $("#sectionBody"); if (el) el.innerHTML = v.body(); }
+  else $("#view").innerHTML = v.shell();
+  v.after?.();
+  renderNav();
+}
+
+/* Toolbar building blocks */
+const searchField = (key, ph) => `<div class="search-field">${icon("search")}<input type="search" placeholder="${ph}" value="${esc(state.f[state.section][key])}" data-filter="${key}" aria-label="${ph}"></div>`;
+const filterSelect = (key, list, all) => `<select class="select" data-filter="${key}" aria-label="${all}">${opts(list, state.f[state.section][key], all)}</select>`;
+const countLabel = (shown, total, noun) => `<span class="result-count" id="resultCount">Showing ${shown} of ${total} ${noun}</span>`;
+const setCount = (shown, total, noun) => { const el = $("#resultCount"); if (el) el.textContent = `Showing ${shown} of ${total} ${noun}`; };
+const emptyRow = (cols, msg) => `<tr><td colspan="${cols}" class="empty">${msg}</td></tr>`;
+
+/* =========================================================
+   Views
+   ========================================================= */
+const VIEWS = {};
+
+/* ---------- Dashboard ---------- */
+VIEWS.dashboard = {
+  shell() {
+    const s = stats();
+    const card = (label, value, ic, tone, foot, feature) =>
+      `<div class="card stat ${feature ? "feature" : ""}"><div class="stat-top"><span class="stat-label">${label}</span><span class="stat-ic ${tone}">${icon(ic)}</span></div><div class="stat-value">${value}</div><div class="stat-foot">${foot}</div></div>`;
+
+    const recent = [...db.orders].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 5);
+    const lowList = db.products.filter((p) => p.stock <= REORDER_LEVEL).sort((a, b) => a.stock - b.stock);
+    const top = [...db.products].sort((a, b) => b.sold - a.sold).slice(0, 5);
+    const maxCat = Math.max(...CATEGORY_SALES.map((c) => c[1]));
+    const latestReviews = [...db.reviews].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+
+    return `
+    <section class="stats">
+      ${card("Total Revenue", inr(s.revenue), "rupee", "t-gold", `<span class="up">▲ 15.1%</span> vs last month`, true)}
+      ${card("Total Orders", s.orders, "bag", "t-wine", `<span class="up">▲ 11%</span> this month`)}
+      ${card("Total Products", s.products, "box", "t-info", `${db.products.filter((p) => p.status === "Draft").length} draft · 8 categories`)}
+      ${card("Total Customers", s.customers, "users", "t-violet", `<span class="up">▲ 9</span> new this month`)}
+      ${card("Pending Orders", s.pending, "clock", "t-warn", `Awaiting confirmation`)}
+      ${card("Completed Orders", s.completed, "check", "t-ok", `${Math.round((s.completed / s.orders) * 100)}% completion rate`)}
+      ${card("Low Stock Products", s.lowStock, "alert", "t-bad", `<button class="link-btn" data-act="nav" data-id="inventory">Review inventory →</button>`)}
+    </section>
+
+    <section class="grid g-2-1">
+      <div class="card">
+        <div class="card-head">
+          <div><h3>Sales overview</h3><p>Last 12 months · Oct 2025 – Sep 2026</p></div>
+          <div class="seg-toggle" role="tablist">
+            <button class="${state.chart === "revenue" ? "on" : ""}" data-act="chart" data-id="revenue">Revenue</button>
+            <button class="${state.chart === "orders" ? "on" : ""}" data-act="chart" data-id="orders">Orders</button>
+          </div>
+        </div>
+        <div class="card-body"><div class="chart-wrap" id="lineChart">${lineChart()}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Order status</h3><p>All ${s.orders} orders</p></div></div>
+        <div class="card-body">${donut(s)}</div>
+      </div>
+    </section>
+
+    <section class="grid g-2-1">
+      <div class="card">
+        <div class="card-head"><div><h3>Recent orders</h3><p>Latest activity from your store</p></div><button class="link-btn" data-act="nav" data-id="orders">View all →</button></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th class="num">Amount</th><th>Payment</th><th>Status</th></tr></thead>
+            <tbody>${recent.map((o) => `
+              <tr data-act="view-order" data-id="${o.id}">
+                <td class="oid">${o.id}</td>
+                <td class="nowrap">${esc(o.customer)}</td>
+                <td><div class="cell-prod"><img src="${o.items[0].img}" alt=""><span>${esc(o.items[0].name)}${o.items.length > 1 ? ` <small>+${o.items.length - 1} more</small>` : ""}</span></div></td>
+                <td class="num">${inr(orderTotal(o))}</td>
+                <td>${badge(o.payment)}</td>
+                <td>${badge(o.status)}</td>
+              </tr>`).join("")}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Low stock alerts</h3><p>At or below ${REORDER_LEVEL} units</p></div></div>
+        <div class="card-body"><div class="mini-list">${lowList.map((p) => `
+          <div class="mini-row" data-act="view-product" data-id="${p.id}">
+            <img src="${p.img}" alt="">
+            <div class="grow"><div class="name">${esc(p.name)}</div><div class="sub">${esc(p.sku)}</div></div>
+            <div class="end">${badge(stockState(p.stock))}<div class="muted" style="margin-top:4px">${p.stock} left</div></div>
+          </div>`).join("")}</div></div>
+      </div>
+    </section>
+
+    <section class="grid g-3">
+      <div class="card">
+        <div class="card-head"><div><h3>Sales by category</h3><p>Share of ${inr(TOTALS.revenue)}</p></div></div>
+        <div class="card-body"><div class="bar-list">${CATEGORY_SALES.map(([c, v], i) => `
+          <div class="bar-row"><div class="bar-meta"><b style="font-weight:500">${c}</b><span>${inr(v)}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(v / maxCat) * 100}%;animation-delay:${i * 60}ms"></div></div></div>`).join("")}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Best sellers</h3><p>Units sold, all time</p></div></div>
+        <div class="card-body"><div class="mini-list">${top.map((p, i) => `
+          <div class="mini-row" data-act="view-product" data-id="${p.id}">
+            <span class="rank">${i + 1}</span><img src="${p.img}" alt="">
+            <div class="grow"><div class="name">${esc(p.name)}</div><div class="sub">${esc(p.category)} · ${inr(p.price)}</div></div>
+            <div class="end">${p.sold}<div class="muted">sold</div></div>
+          </div>`).join("")}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3>Latest reviews</h3><p>Average rating 4.6 / 5</p></div><button class="link-btn" data-act="nav" data-id="reviews">All →</button></div>
+        <div class="card-body"><div class="mini-list">${latestReviews.map((r) => `
+          <div class="mini-row" data-act="nav" data-id="reviews" style="align-items:flex-start">
+            <span class="avatar">${initials(r.customer)}</span>
+            <div class="grow"><div class="name">${esc(r.customer)}</div>${stars(r.rating)}<div class="sub clamp" style="margin-top:4px">${esc(r.text)}</div></div>
+          </div>`).join("")}</div></div>
+      </div>
+    </section>`;
+  },
+  after() { bindLineChart(); },
+};
+
+function lineChart() {
+  const W = 640, H = 250, pl = 50, pr = 12, pt = 14, pb = 30;
+  const key = state.chart === "revenue" ? 1 : 2;
+  const vals = MONTHLY.map((m) => m[key]);
+  const max = key === 1 ? 18000 : 12;
+  const step = key === 1 ? 4500 : 3;
+  const x = (i) => pl + (i * (W - pl - pr)) / (vals.length - 1);
+  const y = (v) => pt + (1 - v / max) * (H - pt - pb);
+  const pts = vals.map((v, i) => [x(i), y(v)]);
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 1; i < pts.length; i++) {
+    const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], cx = (x0 + x1) / 2;
+    d += ` C${cx},${y0} ${cx},${y1} ${x1},${y1}`;
+  }
+  let grid = "";
+  for (let v = 0; v <= max; v += step) {
+    grid += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" stroke="#eadccb" stroke-dasharray="${v ? "3 4" : ""}"/>`;
+    grid += `<text x="${pl - 10}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="#8a7a72">${key === 1 ? (v ? "₹" + v / 1000 + "k" : "₹0") : v}</text>`;
+  }
+  const labels = MONTHLY.map((m, i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#8a7a72">${m[0]}</text>`).join("");
+  const hits = pts.map((p, i) => `<rect class="hit" data-i="${i}" x="${p[0] - (W - pl - pr) / 22}" y="${pt}" width="${(W - pl - pr) / 11}" height="${H - pt - pb}" fill="transparent"/>`).join("");
+  const dots = pts.map((p, i) => `<circle class="pt" data-i="${i}" cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 5 : 3.5}" fill="#fff" stroke="#5b1626" stroke-width="2"/>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${state.chart} by month">
+    <defs><linearGradient id="area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b48a47" stop-opacity=".35"/><stop offset="1" stop-color="#b48a47" stop-opacity="0"/></linearGradient></defs>
+    ${grid}${labels}
+    <path d="${d} L${pts.at(-1)[0]},${y(0)} L${pts[0][0]},${y(0)}Z" fill="url(#area)"/>
+    <path d="${d}" fill="none" stroke="#5b1626" stroke-width="2.5" stroke-linecap="round"/>
+    <line id="guide" x1="0" x2="0" y1="${pt}" y2="${y(0)}" stroke="#b48a47" stroke-dasharray="3 3" opacity="0"/>
+    ${dots}${hits}
+  </svg><div class="chart-tip" id="chartTip"></div>`;
+}
+function bindLineChart() {
+  const wrap = $("#lineChart"); if (!wrap) return;
+  const svg = $("svg", wrap), tip = $("#chartTip"), guide = $("#guide", wrap);
+  $$(".hit", wrap).forEach((r) => {
+    r.addEventListener("mouseenter", () => {
+      const i = +r.dataset.i, dot = $(`.pt[data-i="${i}"]`, wrap);
+      const [m, rev, ord] = MONTHLY[i];
+      const bb = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal, sx = bb.width / vb.width;
+      tip.innerHTML = `${m} ${i < 3 ? 2025 : 2026}<b>${state.chart === "revenue" ? inr(rev) : ord * 1 + " orders"}</b>${state.chart === "revenue" ? ord + " orders" : inr(rev)}`;
+      tip.style.left = dot.cx.baseVal.value * sx + "px";
+      tip.style.top = dot.cy.baseVal.value * sx + "px";
+      tip.classList.add("show");
+      guide.setAttribute("x1", dot.cx.baseVal.value); guide.setAttribute("x2", dot.cx.baseVal.value); guide.setAttribute("opacity", 1);
+      $$(".pt", wrap).forEach((p) => p.setAttribute("r", p === dot ? 6 : 3.5));
+    });
+  });
+  svg.addEventListener("mouseleave", () => { tip.classList.remove("show"); guide.setAttribute("opacity", 0); });
+}
+
+function donut(s) {
+  const other = s.orders - s.completed - s.pending;
+  const parts = [
+    ["Delivered", s.completed, "#3f6b3a"],
+    ["Pending", s.pending, "#d19a3a"],
+    ["Processing", Math.max(0, Math.round(other * 0.5)), "#3d4f7a"],
+    ["Shipped", Math.max(0, other - Math.round(other * 0.5) - 2), "#6a3d7a"],
+    ["Cancelled", Math.min(2, Math.max(0, other)), "#8f1f2c"],
+  ];
+  const total = parts.reduce((a, p) => a + p[1], 0) || 1;
+  const R = 70, C = 2 * Math.PI * R;
+  let off = 0;
+  const arcs = parts.map(([n, v, c]) => {
+    const len = (v / total) * C;
+    const el = `<circle cx="95" cy="95" r="${R}" fill="none" stroke="${c}" stroke-width="20" stroke-dasharray="${Math.max(0, len - 2)} ${C}" stroke-dashoffset="${-off}"><title>${n}: ${v}</title></circle>`;
+    off += len; return el;
+  }).join("");
+  return `<div class="donut-wrap"><div class="donut"><svg viewBox="0 0 190 190"><circle cx="95" cy="95" r="${R}" fill="none" stroke="#f1e6d8" stroke-width="20"/>${arcs}</svg><div class="donut-center"><b>${total}</b><span>orders</span></div></div>
+  <div class="legend">${parts.map(([n, v, c]) => `<div class="legend-row"><i style="background:${c}"></i>${n}<b>${v}</b><small>${Math.round((v / total) * 100)}%</small></div>`).join("")}</div></div>`;
+}
+
+/* ---------- Orders ---------- */
+VIEWS.orders = {
+  shell() {
+    return `<div class="card">
+      <div class="toolbar">
+        ${searchField("q", "Search by order ID, customer or product")}
+        ${filterSelect("status", ORDER_STATUSES, "All statuses")}
+        ${filterSelect("pay", PAY_STATUSES, "All payments")}
+        <span class="spacer"></span>
+        ${countLabel(0, 0, "orders")}
+        <button class="btn btn-ghost" data-act="export-orders">${icon("download")}Export</button>
+        <button class="btn btn-primary" data-act="new-order">${icon("plus")}New order</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Products</th><th class="num">Amount</th><th>Payment</th><th>Status</th><th></th></tr></thead>
+        <tbody id="sectionBody"></tbody>
+      </table></div></div>`;
+  },
+  body() {
+    const f = state.f.orders;
+    const rows = [...db.orders].sort((a, b) => b.id.localeCompare(a.id)).filter((o) =>
+      (!f.status || o.status === f.status) && (!f.pay || o.payment === f.pay) &&
+      matches(f.q, o.id, o.customer, o.phone, ...o.items.map((i) => i.name)));
+    setCount(rows.length, db.orders.length, "orders");
+    if (!rows.length) return emptyRow(8, "No orders match these filters. Try clearing the search.");
+    return rows.map((o) => `
+      <tr data-act="view-order" data-id="${o.id}">
+        <td class="oid">${o.id}</td>
+        <td class="nowrap">${fmtDate(o.date)}</td>
+        <td class="nowrap"><b style="font-weight:500">${esc(o.customer)}</b><br><small class="muted">${esc(o.city)} · ${o.method}</small></td>
+        <td><div class="cell-prod"><img src="${o.items[0].img}" alt=""><span>${esc(o.items[0].name)}${o.items.length > 1 ? `<br><small>+${o.items.length - 1} more item</small>` : `<br><small>Qty ${o.items[0].qty}</small>`}</span></div></td>
+        <td class="num"><b>${inr(orderTotal(o))}</b></td>
+        <td>${badge(o.payment)}</td>
+        <td>${badge(o.status)}</td>
+        <td><div class="row-actions">
+          <button data-act="view-order" data-id="${o.id}" title="View">${icon("eye")}</button>
+          <button class="del" data-act="delete-order" data-id="${o.id}" title="Delete">${icon("trash")}</button>
+        </div></td>
+      </tr>`).join("");
+  },
+};
+
+/* ---------- Products ---------- */
+VIEWS.products = {
+  shell() {
+    return `<div class="card">
+      <div class="toolbar">
+        ${searchField("q", "Search by name or SKU")}
+        ${filterSelect("cat", db.categories.map((c) => c.name), "All categories")}
+        ${filterSelect("status", ["Active", "Draft"], "All statuses")}
+        <span class="spacer"></span>
+        ${countLabel(0, 0, "products")}
+        <button class="btn btn-primary" data-act="new-product">${icon("plus")}Add product</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Product</th><th>Category</th><th class="num">Price</th><th class="num">Stock</th><th>Status</th><th>Created</th><th></th></tr></thead>
+        <tbody id="sectionBody"></tbody>
+      </table></div></div>`;
+  },
+  body() {
+    const f = state.f.products;
+    const rows = db.products.filter((p) => (!f.cat || p.category === f.cat) && (!f.status || p.status === f.status) && matches(f.q, p.name, p.sku, p.category));
+    setCount(rows.length, db.products.length, "products");
+    if (!rows.length) return emptyRow(7, "No products match these filters.");
+    return rows.map((p) => `
+      <tr data-act="view-product" data-id="${p.id}">
+        <td><div class="cell-prod"><img src="${p.img}" alt=""><div><b>${esc(p.name)}</b><small class="mono">${esc(p.sku)}</small></div></div></td>
+        <td class="nowrap">${esc(p.category)}</td>
+        <td class="num">${inr(p.price)}</td>
+        <td class="num">${p.stock}<br>${badge(stockState(p.stock))}</td>
+        <td>${badge(p.status)}</td>
+        <td class="nowrap">${fmtDate(p.created)}</td>
+        <td><div class="row-actions">
+          <button data-act="view-product" data-id="${p.id}" title="View">${icon("eye")}</button>
+          <button data-act="edit-product" data-id="${p.id}" title="Edit">${icon("edit")}</button>
+          <button class="del" data-act="delete-product" data-id="${p.id}" title="Delete">${icon("trash")}</button>
+        </div></td>
+      </tr>`).join("");
+  },
+};
+
+/* ---------- Inventory ---------- */
+VIEWS.inventory = {
+  stats() {
+    const inS = db.products.filter((p) => stockState(p.stock) === "In Stock").length;
+    const low = db.products.filter((p) => stockState(p.stock) === "Low Stock").length;
+    const out = db.products.filter((p) => stockState(p.stock) === "Out of Stock").length;
+    const units = db.products.reduce((s, p) => s + p.stock, 0);
+    const value = db.products.reduce((s, p) => s + p.stock * p.price, 0);
+    const c = (l, v, ic, t, f) => `<div class="card stat"><div class="stat-top"><span class="stat-label">${l}</span><span class="stat-ic ${t}">${icon(ic)}</span></div><div class="stat-value">${v}</div><div class="stat-foot">${f}</div></div>`;
+    return `
+        ${c("Units in stock", units, "layers", "t-gold", `Across ${db.products.length} products`)}
+        ${c("Stock value", inr(value), "rupee", "t-wine", "At retail price")}
+        ${c("In Stock", inS, "check", "t-ok", "Healthy levels")}
+        ${c("Low Stock", low, "alert", "t-warn", `≤ ${REORDER_LEVEL} units left`)}
+        ${c("Out of Stock", out, "x", "t-bad", "Restock needed")}`;
+  },
+  shell() {
+    return `<section class="stats" id="invStats"></section>
+      <div class="card">
+      <div class="toolbar">
+        ${searchField("q", "Search products or SKU")}
+        ${filterSelect("stock", ["In Stock", "Low Stock", "Out of Stock"], "All stock levels")}
+        <span class="spacer"></span>
+        ${countLabel(0, 0, "products")}
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Product</th><th>Category</th><th>Level</th><th>Adjust stock</th><th>Status</th><th class="num">Stock value</th></tr></thead>
+        <tbody id="sectionBody"></tbody>
+      </table></div></div>`;
+  },
+  body() {
+    const f = state.f.inventory;
+    const rows = [...db.products].sort((a, b) => a.stock - b.stock).filter((p) => (!f.stock || stockState(p.stock) === f.stock) && matches(f.q, p.name, p.sku, p.category));
+    setCount(rows.length, db.products.length, "products");
+    if (!rows.length) return emptyRow(6, "No products at this stock level.");
+    return rows.map((p) => {
+      const st = stockState(p.stock), pct = Math.min(100, (p.stock / 40) * 100);
+      const col = st === "In Stock" ? "var(--ok)" : st === "Low Stock" ? "#d19a3a" : "var(--bad)";
+      return `<tr>
+        <td><div class="cell-prod"><img src="${p.img}" alt=""><div><b>${esc(p.name)}</b><small class="mono">${esc(p.sku)}</small></div></div></td>
+        <td class="nowrap">${esc(p.category)}</td>
+        <td><div class="meter"><i style="width:${Math.max(pct, p.stock ? 4 : 0)}%;background:${col}"></i></div></td>
+        <td><div class="stock-ctrl">
+          <button data-act="stock" data-id="${p.id}" data-d="-1" aria-label="Decrease stock">${icon("minus")}</button>
+          <span>${p.stock}</span>
+          <button data-act="stock" data-id="${p.id}" data-d="1" aria-label="Increase stock">${icon("plus")}</button>
+        </div>${st !== "In Stock" ? ` <button class="btn btn-ghost btn-sm" data-act="restock" data-id="${p.id}" style="margin-left:6px">Restock +20</button>` : ""}</td>
+        <td>${badge(st)}</td>
+        <td class="num">${inr(p.stock * p.price)}</td>
+      </tr>`;
+    }).join("");
+  },
+  after() { $("#invStats").innerHTML = VIEWS.inventory.stats(); },
+};
+
+/* ---------- Custom orders ---------- */
+VIEWS.custom = {
+  shell() {
+    return `<div class="card">
+      <div class="toolbar">
+        ${searchField("q", "Search requests, customers or IDs")}
+        ${filterSelect("status", CUSTOM_STATUSES, "All statuses")}
+        <span class="spacer"></span>
+        ${countLabel(0, 0, "requests")}
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Request</th><th>Customer</th><th>Reference</th><th>Customisation</th><th>Product</th><th class="num">Price</th><th>Status</th><th>Date</th><th></th></tr></thead>
+        <tbody id="sectionBody"></tbody>
+      </table></div></div>`;
+  },
+  body() {
+    const f = state.f.custom;
+    const rows = db.customOrders.filter((c) => (!f.status || c.status === f.status) && matches(f.q, c.id, c.customer, c.request, c.product, c.phone));
+    setCount(rows.length, db.customOrders.length, "requests");
+    if (!rows.length) return emptyRow(9, "No custom requests match.");
+    return rows.map((c) => `
+      <tr data-act="view-custom" data-id="${c.id}">
+        <td class="oid">${c.id}</td>
+        <td class="nowrap"><b style="font-weight:500">${esc(c.customer)}</b><br><small class="muted">${esc(c.phone)}</small></td>
+        <td><button class="thumb-btn" data-act="lightbox" data-src="${c.id}" title="Preview reference image"><img src="${c.ref}" alt="Reference image for ${c.id}"></button></td>
+        <td><div class="clamp">${esc(c.request)}</div></td>
+        <td class="nowrap">${esc(c.product)}</td>
+        <td class="num">${inr(c.price)}</td>
+        <td>${badge(c.status)}</td>
+        <td class="nowrap">${fmtDate(c.date)}</td>
+        <td><div class="row-actions">
+          <button data-act="view-custom" data-id="${c.id}" title="View">${icon("eye")}</button>
+          <button class="del" data-act="delete-custom" data-id="${c.id}" title="Delete">${icon("trash")}</button>
+        </div></td>
+      </tr>`).join("");
+  },
+};
+
+/* ---------- Customers ---------- */
+VIEWS.customers = {
+  shell() {
+    return `<div class="card">
+      <div class="toolbar">
+        ${searchField("q", "Search by name, phone, email or city")}
+        <select class="select" data-filter="sort" aria-label="Sort customers">
+          ${[["spent", "Top spenders"], ["orders", "Most orders"], ["last", "Recent activity"], ["name", "Name A–Z"]].map(([v, l]) => `<option value="${v}" ${state.f.customers.sort === v ? "selected" : ""}>${l}</option>`).join("")}
+        </select>
+        <span class="spacer"></span>
+        ${countLabel(0, 0, "customers")}
+        <button class="btn btn-primary" data-act="new-customer">${icon("plus")}Add customer</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Customer</th><th>Phone</th><th>Email</th><th class="num">Orders</th><th class="num">Total spent</th><th>Last order</th><th></th></tr></thead>
+        <tbody id="sectionBody"></tbody>
+      </table></div></div>`;
+  },
+  body() {
+    const f = state.f.customers;
+    const sorters = { spent: (a, b) => b.spent - a.spent, orders: (a, b) => b.orders - a.orders, last: (a, b) => b.last.localeCompare(a.last), name: (a, b) => a.name.localeCompare(b.name) };
+    const rows = db.customers.filter((c) => matches(f.q, c.name, c.phone, c.email, c.city)).sort(sorters[f.sort]);
+    setCount(rows.length, db.customers.length, "customers");
+    if (!rows.length) return emptyRow(7, "No customers match your search.");
+    return rows.map((c) => `
+      <tr data-act="view-customer" data-id="${c.id}">
+        <td><div class="cell-prod" style="min-width:180px"><span class="avatar">${initials(c.name)}</span><div><b>${esc(c.name)}</b><small>${esc(c.city)}</small></div></div></td>
+        <td class="nowrap">${esc(c.phone)}</td>
+        <td>${esc(c.email)}</td>
+        <td class="num">${c.orders}</td>
+        <td class="num"><b>${inr(c.spent)}</b></td>
+        <td class="nowrap">${c.last ? fmtDate(c.last) : "—"}</td>
+        <td><div class="row-actions">
+          <button data-act="view-customer" data-id="${c.id}" title="View">${icon("eye")}</button>
+          <button data-act="edit-customer" data-id="${c.id}" title="Edit">${icon("edit")}</button>
+          <button class="del" data-act="delete-customer" data-id="${c.id}" title="Delete">${icon("trash")}</button>
+        </div></td>
+      </tr>`).join("");
+  },
+};
+
+/* ---------- Reviews ---------- */
+VIEWS.reviews = {
+  shell() {
+    return `<div class="card">
+      <div class="toolbar">
+        ${searchField("q", "Search reviews, customers or products")}
+        <select class="select" data-filter="rating" aria-label="Filter by rating">
+          <option value="">All ratings</option>${[5, 4, 3, 2, 1].map((n) => `<option value="${n}" ${state.f.reviews.rating == n ? "selected" : ""}>${n} stars</option>`).join("")}
+        </select>
+        ${filterSelect("status", REVIEW_STATUSES, "All statuses")}
+        <span class="spacer"></span>
+        ${countLabel(0, 0, "reviews")}
+      </div>
+      <div class="review-grid" id="sectionBody"></div></div>`;
+  },
+  body() {
+    const f = state.f.reviews;
+    const rows = [...db.reviews].sort((a, b) => b.date.localeCompare(a.date)).filter((r) => {
+      const p = product(r.pid);
+      return (!f.rating || r.rating == f.rating) && (!f.status || r.status === f.status) && matches(f.q, r.customer, r.text, p?.name);
+    });
+    setCount(rows.length, db.reviews.length, "reviews");
+    if (!rows.length) return `<div class="empty" style="grid-column:1/-1">No reviews match these filters.</div>`;
+    return rows.map((r) => {
+      const p = product(r.pid);
+      return `<article class="card review">
+        <div class="review-top"><span class="avatar">${initials(r.customer)}</span>
+          <div class="grow"><b>${esc(r.customer)}</b><small class="muted">${fmtDate(r.date)}</small></div>${badge(r.status)}</div>
+        ${stars(r.rating)}
+        <p class="review-text">“${esc(r.text)}”</p>
+        ${p ? `<div class="review-prod"><img src="${p.img}" alt="">${esc(p.name)}</div>` : ""}
+        <div class="review-foot">
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${r.status !== "Published" ? `<button class="btn btn-primary btn-sm" data-act="review-status" data-id="${r.id}" data-s="Published">Approve</button>` : ""}
+            ${r.status !== "Hidden" ? `<button class="btn btn-ghost btn-sm" data-act="review-status" data-id="${r.id}" data-s="Hidden">Hide</button>` : ""}
+          </div>
+          <div class="row-actions"><button class="del" data-act="delete-review" data-id="${r.id}" title="Delete">${icon("trash")}</button></div>
+        </div>
+      </article>`;
+    }).join("");
+  },
+};
+
+/* ---------- Categories ---------- */
+VIEWS.categories = {
+  shell() {
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap">
+      <p class="muted" style="margin:0;font-size:13px">${db.categories.length} collections · click a card to see its products</p>
+      <button class="btn btn-primary" data-act="new-category">${icon("plus")}Add category</button></div>
+      <div class="cat-grid" id="sectionBody"></div>`;
+  },
+  body() {
+    return db.categories.map((c) => {
+      const count = db.products.filter((p) => p.category === c.name).length;
+      return `<article class="card cat-card">
+        <div class="cover" data-act="open-category" data-id="${c.id}" style="cursor:pointer"><img src="${art(CATEGORY_KIND[c.name] || "bouquet", c.pal, 100 + Number(c.id.slice(1)))}" alt=""><span>${count} product${count === 1 ? "" : "s"}</span></div>
+        <div class="inner"><h4>${esc(c.name)}</h4><p>${esc(c.desc)}</p>
+          <div class="foot"><button class="link-btn" data-act="open-category" data-id="${c.id}">View products →</button>
+          <div class="row-actions"><button data-act="edit-category" data-id="${c.id}" title="Edit">${icon("edit")}</button><button class="del" data-act="delete-category" data-id="${c.id}" title="Delete">${icon("trash")}</button></div></div>
+        </div></article>`;
+    }).join("") || `<div class="empty">No categories yet.</div>`;
+  },
+};
+
+/* =========================================================
+   Modal, confirm, lightbox, toast
+   ========================================================= */
+const modalRoot = $("#modalRoot");
+let confirmFn = null;
+
+function openModal({ title, sub = "", body, foot = "", size = "" }) {
+  modalRoot.innerHTML = `<div class="modal-backdrop" data-act="close-modal"></div>
+    <div class="modal ${size}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <header><div><h3>${title}</h3>${sub ? `<div class="sub">${sub}</div>` : ""}</div><button class="icon-btn" data-act="close-modal" aria-label="Close">${icon("x")}</button></header>
+      <div class="modal-body">${body}</div>${foot ? `<footer>${foot}</footer>` : ""}</div>`;
+  requestAnimationFrame(() => modalRoot.classList.add("open"));
+  setTimeout(() => $("input:not([type=file]), select, textarea", modalRoot)?.focus?.(), 60);
+}
+function closeModal() { modalRoot.classList.remove("open"); setTimeout(() => { if (!modalRoot.classList.contains("open")) modalRoot.innerHTML = ""; }, 250); }
+function confirmBox(title, message, fn, label = "Delete") {
+  confirmFn = fn;
+  openModal({ title, size: "sm", body: `<p style="margin:0;color:var(--ink-soft)">${message}</p>`,
+    foot: `<button class="btn btn-ghost" data-act="close-modal">Cancel</button><button class="btn btn-danger" data-act="confirm-yes">${label}</button>` });
+}
+function lightbox(src, caption = "") {
+  const lb = $("#lightbox"); $("img", lb).src = src; $("p", lb).textContent = caption; lb.classList.add("open");
+}
+function toast(msg, ic = "check") {
+  const t = document.createElement("div");
+  t.className = "toast"; t.innerHTML = icon(ic) + `<span>${esc(msg)}</span>`;
+  $("#toasts").appendChild(t);
+  setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 300); }, 2800);
+}
+
+/* =========================================================
+   Detail modals & forms
+   ========================================================= */
+function viewProduct(id) {
+  const p = product(id); if (!p) return;
+  const reviews = db.reviews.filter((r) => r.pid === id);
+  openModal({
+    title: esc(p.name), sub: `${esc(p.sku)} · ${esc(p.category)}`, size: "lg",
+    body: `<div class="detail-grid">
+      <div class="detail-img" data-act="lightbox-url" data-src="${p.id}" title="Click to enlarge"><img src="${p.img}" alt="${esc(p.name)}"></div>
+      <div>
+        <div class="price-lg">${inr(p.price)}</div>
+        <div style="display:flex;gap:6px;margin:10px 0 16px">${badge(p.status)}${badge(stockState(p.stock))}</div>
+        <p style="margin:0 0 18px;color:var(--ink-soft)">${esc(p.desc)}</p>
+        <div class="kv">
+          <div><span>Stock</span><b>${p.stock} units</b></div>
+          <div><span>Units sold</span><b>${p.sold}</b></div>
+          <div><span>Category</span><b>${esc(p.category)}</b></div>
+          <div><span>SKU</span><b class="mono">${esc(p.sku)}</b></div>
+          <div><span>Created</span><b>${fmtDate(p.created)}</b></div>
+          <div><span>Revenue</span><b>${inr(p.sold * p.price)}</b></div>
+        </div>
+      </div></div>
+      ${reviews.length ? `<div class="section-label">Customer reviews (${reviews.length})</div>${reviews.map((r) => `<div style="margin-bottom:10px">${stars(r.rating)} <b style="font-weight:500">${esc(r.customer)}</b><p class="quote" style="margin-top:6px">${esc(r.text)}</p></div>`).join("")}` : ""}`,
+    foot: `<button class="btn btn-ghost left del" data-act="delete-product" data-id="${p.id}" style="color:var(--bad)">${icon("trash")}Delete</button>
+      <button class="btn btn-ghost" data-act="close-modal">Close</button>
+      <button class="btn btn-primary" data-act="edit-product" data-id="${p.id}">${icon("edit")}Edit product</button>`,
+  });
+}
+
+let formImg = null;
+function productForm(id) {
+  const p = id ? product(id) : null;
+  formImg = p ? p.img : null;
+  const cat = p?.category || db.categories[0]?.name || "Earrings";
+  const preview = formImg || art(CATEGORY_KIND[cat] || "bouquet", 2, 7);
+  openModal({
+    title: p ? "Edit product" : "Add product", sub: p ? esc(p.sku) : "New item for your catalogue", size: "lg",
+    body: `<form id="productForm" class="form-grid" onsubmit="return false">
+      <div class="field full"><label>Product image</label>
+        <div class="upload"><img id="pfPreview" src="${preview}" alt="Preview">
+          <div><label class="btn btn-ghost btn-sm" style="cursor:pointer">${icon("upload")}Choose image<input type="file" accept="image/*" id="pfFile"></label>
+          <div class="hint">JPG or PNG. Preview only — the image stays in this browser tab.</div></div></div></div>
+      <div class="field full"><label for="pfName">Product name</label><input class="input" id="pfName" required value="${esc(p?.name || "")}" placeholder="e.g. Sunflower Resin Studs"></div>
+      <div class="field"><label for="pfCat">Category</label><select class="select" id="pfCat">${opts(db.categories.map((c) => c.name), cat)}</select></div>
+      <div class="field"><label for="pfSku">SKU</label><input class="input mono" id="pfSku" value="${esc(p?.sku || nextSku(cat))}"></div>
+      <div class="field"><label for="pfPrice">Price (₹)</label><input class="input" id="pfPrice" type="number" min="0" step="1" value="${p?.price ?? 299}"></div>
+      <div class="field"><label for="pfStock">Stock</label><input class="input" id="pfStock" type="number" min="0" step="1" value="${p?.stock ?? 10}"></div>
+      <div class="field"><label for="pfStatus">Status</label><select class="select" id="pfStatus">${opts(["Active", "Draft"], p?.status || "Active")}</select></div>
+      <div class="field"><label>Created</label><input class="input" disabled value="${fmtDate(p?.created || today())}"></div>
+      <div class="field full"><label for="pfDesc">Description</label><textarea class="input" id="pfDesc" rows="3">${esc(p?.desc || "")}</textarea></div>
+    </form>`,
+    foot: `<button class="btn btn-ghost" data-act="close-modal">Cancel</button><button class="btn btn-primary" data-act="save-product" data-id="${id || ""}">${p ? "Save changes" : "Add product"}</button>`,
+  });
+  $("#pfFile").addEventListener("change", (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    if (!file.type.startsWith("image/")) { toast("Please choose an image file", "alert"); return; }
+    const reader = new FileReader();
+    reader.onload = () => { formImg = reader.result; $("#pfPreview").src = formImg; toast("Image preview updated", "image"); };
+    reader.readAsDataURL(file);
+  });
+  $("#pfCat").addEventListener("change", (e) => {
+    if (!p) $("#pfSku").value = nextSku(e.target.value);
+    if (!formImg) $("#pfPreview").src = art(CATEGORY_KIND[e.target.value] || "bouquet", 2, 7);
+  });
+}
+function nextSku(cat) {
+  const code = cat.replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase();
+  const n = db.products.filter((p) => p.sku.includes(`-${code}-`)).length + 1;
+  return `SA-${code}-${String(n).padStart(3, "0")}`;
+}
+function saveProduct(id) {
+  const name = $("#pfName").value.trim();
+  if (!name) { $("#pfName").focus(); toast("Product name is required", "alert"); return; }
+  const data = {
+    name, category: $("#pfCat").value, sku: $("#pfSku").value.trim() || nextSku($("#pfCat").value),
+    price: Math.max(0, +$("#pfPrice").value || 0), stock: Math.max(0, Math.floor(+$("#pfStock").value || 0)),
+    status: $("#pfStatus").value, desc: $("#pfDesc").value.trim() || `Handmade ${name.toLowerCase()} cast in clear resin.`,
+  };
+  if (id) {
+    const p = product(id);
+    if (!formImg && p.category !== data.category) p.img = art(CATEGORY_KIND[data.category] || "bouquet", 2, 7);
+    Object.assign(p, data, formImg ? { img: formImg } : {});
+    toast(`Saved “${name}”`);
+  } else {
+    const nid = "p" + (Math.max(...db.products.map((p) => +p.id.slice(1)), 0) + 1);
+    db.products.unshift({ id: nid, ...data, created: today(), sold: 0, img: formImg || art(CATEGORY_KIND[data.category] || "bouquet", (+nid.slice(1)) % 6, +nid.slice(1)) });
+    toast(`Added “${name}” to the catalogue`);
+  }
+  closeModal(); refreshBody();
+}
+
+function viewOrder(id) {
+  const o = db.orders.find((x) => x.id === id); if (!o) return;
+  const total = orderTotal(o);
+  const steps = ["Pending", "Processing", "Shipped", "Delivered"];
+  const at = steps.indexOf(o.status);
+  const timeline = o.status === "Cancelled"
+    ? `<div class="cancel-note t-bad">This order was cancelled${o.payment === "Refunded" ? " and the payment refunded" : ""}.</div>`
+    : `<div class="timeline">${["Placed", "Processing", "Shipped", "Delivered"].map((s, i) => `<div class="tl-step ${i <= Math.max(at, 0) ? "done" : ""}"><i></i>${s}</div>`).join("")}</div>`;
+  openModal({
+    title: `Order ${o.id}`, sub: `Placed ${fmtDate(o.date)} · ${o.method}`, size: "lg",
+    body: `${timeline}
+      <div class="section-label">Items</div>
+      <div class="order-items">${o.items.map((i) => `<div class="order-item"><img src="${i.img}" alt="" data-act="lightbox-img" style="cursor:zoom-in"><div class="grow"><b style="font-weight:500">${esc(i.name)}</b><div class="muted">${inr(i.price)} × ${i.qty}</div></div><b>${inr(i.price * i.qty)}</b></div>`).join("")}</div>
+      <div class="order-total"><div><span class="muted">Subtotal</span><span>${inr(total)}</span></div><div><span class="muted">Shipping</span><span>Free</span></div><div class="grand"><span>Total</span><span>${inr(total)}</span></div></div>
+      <div class="section-label">Customer</div>
+      <div class="kv">
+        <div><span>Name</span><b>${esc(o.customer)}</b></div>
+        <div><span>Phone</span><b>${esc(o.phone)}</b></div>
+        <div><span>City</span><b>${esc(o.city)}</b></div>
+        <div><span>Payment method</span><b>${esc(o.method)}</b></div>
+      </div>
+      <div class="section-label">Update order</div>
+      <div class="form-grid">
+        <div class="field"><label for="ofStatus">Order status</label><select class="select" id="ofStatus">${opts(ORDER_STATUSES, o.status)}</select></div>
+        <div class="field"><label for="ofPay">Payment status</label><select class="select" id="ofPay">${opts(PAY_STATUSES, o.payment)}</select></div>
+      </div>`,
+    foot: `<button class="btn btn-ghost left" data-act="delete-order" data-id="${o.id}" style="color:var(--bad)">${icon("trash")}Delete</button>
+      <button class="btn btn-ghost" data-act="invoice" data-id="${o.id}">${icon("download")}Invoice</button>
+      ${db.customers.some((c) => c.id === o.cid) ? `<button class="btn btn-ghost" data-act="view-customer" data-id="${o.cid}">${icon("users")}Customer</button>` : ""}
+      <button class="btn btn-primary" data-act="save-order" data-id="${o.id}">Save changes</button>`,
+  });
+}
+function saveOrder(id) {
+  const o = db.orders.find((x) => x.id === id);
+  const s = $("#ofStatus").value, p = $("#ofPay").value;
+  const changed = s !== o.status || p !== o.payment;
+  o.status = s; o.payment = p;
+  closeModal(); refreshBody();
+  toast(changed ? `${o.id} updated to ${s} · ${p}` : "No changes to save", changed ? "check" : "clock");
+}
+
+function newOrderForm() {
+  const active = db.products.filter((p) => p.status === "Active" && p.stock > 0);
+  openModal({
+    title: "New order", sub: "Create a manual order (e.g. from Instagram or WhatsApp)",
+    body: `<div class="form-grid">
+      <div class="field full"><label for="noCust">Customer</label><select class="select" id="noCust">${db.customers.map((c) => `<option value="${c.id}">${esc(c.name)} · ${esc(c.phone)}</option>`).join("")}</select></div>
+      <div class="field full"><label for="noProd">Product</label><select class="select" id="noProd">${active.map((p) => `<option value="${p.id}">${esc(p.name)} · ${inr(p.price)} (${p.stock} in stock)</option>`).join("")}</select></div>
+      <div class="field"><label for="noQty">Quantity</label><input class="input" id="noQty" type="number" min="1" value="1"></div>
+      <div class="field"><label for="noMethod">Payment method</label><select class="select" id="noMethod">${opts(["UPI", "Card", "COD"], "UPI")}</select></div>
+      <div class="field"><label for="noPay">Payment status</label><select class="select" id="noPay">${opts(PAY_STATUSES, "Paid")}</select></div>
+      <div class="field"><label for="noStatus">Order status</label><select class="select" id="noStatus">${opts(ORDER_STATUSES, "Processing")}</select></div>
+    </div>`,
+    foot: `<button class="btn btn-ghost" data-act="close-modal">Cancel</button><button class="btn btn-primary" data-act="save-new-order">Create order</button>`,
+  });
+}
+function saveNewOrder() {
+  const c = db.customers.find((x) => x.id === $("#noCust").value);
+  const p = product($("#noProd").value);
+  if (!c || !p) { toast("Choose a customer and product", "alert"); return; }
+  const qty = Math.max(1, Math.min(p.stock, Math.floor(+$("#noQty").value || 1)));
+  const num = Math.max(...db.orders.map((o) => +o.id.slice(3))) + 1;
+  const o = {
+    id: "SA-" + String(num).padStart(4, "0"), cid: c.id, customer: c.name, phone: c.phone, city: c.city,
+    payment: $("#noPay").value, status: $("#noStatus").value, date: today(), method: $("#noMethod").value,
+    items: [{ pid: p.id, qty, name: p.name, price: p.price, img: p.img }],
+  };
+  db.orders.push(o);
+  p.stock -= qty; p.sold += qty;
+  c.orders += 1; c.spent += p.price * qty; c.last = o.date;
+  closeModal(); refreshBody();
+  toast(`Order ${o.id} created for ${c.name}`);
+}
+
+function viewCustomer(id) {
+  const c = db.customers.find((x) => x.id === id); if (!c) return;
+  const orders = db.orders.filter((o) => o.cid === id).sort((a, b) => b.date.localeCompare(a.date));
+  openModal({
+    title: "Customer details", size: "lg",
+    body: `<div class="profile-head"><span class="avatar lg">${initials(c.name)}</span>
+        <div><h4>${esc(c.name)}</h4><div class="muted">${esc(c.city)} · Customer since ${fmtDate(c.since)}</div></div></div>
+      <div class="mini-stats">
+        <div class="mini-stat"><span>Orders</span><b>${c.orders}</b></div>
+        <div class="mini-stat"><span>Total spent</span><b>${inr(c.spent)}</b></div>
+        <div class="mini-stat"><span>Avg. order</span><b>${inr(c.orders ? c.spent / c.orders : 0)}</b></div>
+      </div>
+      <div class="section-label">Contact</div>
+      <div class="kv">
+        <div><span>Phone</span><b>${esc(c.phone)}</b></div>
+        <div><span>Email</span><b>${esc(c.email)}</b></div>
+        <div><span>Last order</span><b>${c.last ? fmtDate(c.last) : "—"}</b></div>
+        <div><span>City</span><b>${esc(c.city)}</b></div>
+      </div>
+      <div class="section-label">Recent orders</div>
+      ${orders.length ? `<div class="order-items">${orders.map((o) => `
+        <div class="order-item" data-act="view-order" data-id="${o.id}" style="cursor:pointer"><img src="${o.items[0].img}" alt="">
+          <div class="grow"><b class="oid">${o.id}</b> <span class="muted">· ${fmtDate(o.date)}</span><div class="muted">${esc(o.items.map((i) => i.name).join(", "))}</div></div>
+          <div style="text-align:right">${inr(orderTotal(o))}<div style="margin-top:4px">${badge(o.status)}</div></div></div>`).join("")}</div>`
+        : `<p class="muted">Older orders are archived. No orders in the current window.</p>`}`,
+    foot: `<button class="btn btn-ghost left" data-act="delete-customer" data-id="${c.id}" style="color:var(--bad)">${icon("trash")}Delete</button>
+      <button class="btn btn-ghost" data-act="demo-msg" data-id="Email">${icon("mail")}Email</button>
+      <button class="btn btn-ghost" data-act="edit-customer" data-id="${c.id}">${icon("edit")}Edit</button>
+      <button class="btn btn-primary" data-act="close-modal">Done</button>`,
+  });
+}
+function customerForm(id) {
+  const c = id ? db.customers.find((x) => x.id === id) : null;
+  openModal({
+    title: c ? "Edit customer" : "Add customer",
+    body: `<div class="form-grid">
+      <div class="field full"><label for="cfName">Full name</label><input class="input" id="cfName" value="${esc(c?.name || "")}" placeholder="e.g. Kavya Nair"></div>
+      <div class="field"><label for="cfPhone">Phone</label><input class="input" id="cfPhone" value="${esc(c?.phone || "+91 ")}"></div>
+      <div class="field"><label for="cfCity">City</label><input class="input" id="cfCity" value="${esc(c?.city || "")}"></div>
+      <div class="field full"><label for="cfEmail">Email</label><input class="input" id="cfEmail" type="email" value="${esc(c?.email || "")}" placeholder="name@example.com"></div>
+    </div>`,
+    foot: `<button class="btn btn-ghost" data-act="close-modal">Cancel</button><button class="btn btn-primary" data-act="save-customer" data-id="${id || ""}">${c ? "Save changes" : "Add customer"}</button>`,
+  });
+}
+function saveCustomer(id) {
+  const name = $("#cfName").value.trim();
+  if (!name) { $("#cfName").focus(); toast("Name is required", "alert"); return; }
+  const data = { name, phone: $("#cfPhone").value.trim(), city: $("#cfCity").value.trim() || "—", email: $("#cfEmail").value.trim() };
+  if (id) {
+    Object.assign(db.customers.find((x) => x.id === id), data);
+    db.orders.filter((o) => o.cid === id).forEach((o) => Object.assign(o, { customer: data.name, phone: data.phone, city: data.city }));
+    toast(`Saved ${name}`);
+  } else {
+    const nid = "u" + (Math.max(...db.customers.map((c) => +c.id.slice(1)), 0) + 1);
+    db.customers.push({ id: nid, ...data, orders: 0, spent: 0, last: "", since: today() });
+    toast(`Added ${name}`);
+  }
+  closeModal(); refreshBody();
+}
+
+function viewCustom(id) {
+  const c = db.customOrders.find((x) => x.id === id); if (!c) return;
+  openModal({
+    title: `Custom request ${c.id}`, sub: `Received ${fmtDate(c.date)}`, size: "lg",
+    body: `<div class="detail-grid">
+      <div><div class="detail-img" data-act="lightbox" data-src="${c.id}" title="Click to enlarge"><img src="${c.ref}" alt="Reference image"></div>
+        <label class="btn btn-ghost btn-sm" style="margin-top:10px;cursor:pointer;width:100%">${icon("upload")}Replace reference<input type="file" accept="image/*" id="coFile" hidden></label></div>
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><div class="muted">${esc(c.product)}</div><div class="price-lg" style="margin-top:4px">${inr(c.price)}</div></div>${badge(c.status)}</div>
+        <div class="section-label">Customisation request</div>
+        <p class="quote">${esc(c.request)}</p>
+        <div class="section-label">Customer</div>
+        <div class="kv"><div><span>Name</span><b>${esc(c.customer)}</b></div><div><span>Phone</span><b>${esc(c.phone)}</b></div></div>
+        <div class="section-label">Update request</div>
+        <div class="form-grid">
+          <div class="field"><label for="coStatus">Status</label><select class="select" id="coStatus">${opts(CUSTOM_STATUSES, c.status)}</select></div>
+          <div class="field"><label for="coPrice">Quoted price (₹)</label><input class="input" id="coPrice" type="number" min="0" value="${c.price}"></div>
+        </div>
+      </div></div>`,
+    foot: `<button class="btn btn-ghost left" data-act="delete-custom" data-id="${c.id}" style="color:var(--bad)">${icon("trash")}Delete</button>
+      <button class="btn btn-ghost" data-act="demo-msg" data-id="WhatsApp">${icon("phone")}Message</button>
+      <button class="btn btn-primary" data-act="save-custom" data-id="${c.id}">Save changes</button>`,
+  });
+  $("#coFile").addEventListener("change", (e) => {
+    const f = e.target.files[0]; if (!f || !f.type.startsWith("image/")) return;
+    const r = new FileReader();
+    r.onload = () => { c.ref = r.result; $(".detail-img img", modalRoot).src = c.ref; refreshBody(); toast("Reference image replaced (preview only)", "image"); };
+    r.readAsDataURL(f);
+  });
+}
+
+function categoryForm(id) {
+  const c = id ? db.categories.find((x) => x.id === id) : null;
+  openModal({
+    title: c ? "Edit category" : "Add category",
+    body: `<div class="form-grid">
+      <div class="field full"><label for="kfName">Name</label><input class="input" id="kfName" value="${esc(c?.name || "")}" placeholder="e.g. Wall Art"></div>
+      <div class="field full"><label for="kfDesc">Description</label><textarea class="input" id="kfDesc" rows="3">${esc(c?.desc || "")}</textarea></div>
+    </div>`,
+    foot: `<button class="btn btn-ghost" data-act="close-modal">Cancel</button><button class="btn btn-primary" data-act="save-category" data-id="${id || ""}">${c ? "Save changes" : "Add category"}</button>`,
+  });
+}
+function saveCategory(id) {
+  const name = $("#kfName").value.trim();
+  if (!name) { $("#kfName").focus(); toast("Name is required", "alert"); return; }
+  if (db.categories.some((c) => c.id !== id && norm(c.name) === norm(name))) { toast("A category with that name exists", "alert"); return; }
+  const desc = $("#kfDesc").value.trim() || "A new collection of handmade pieces.";
+  if (id) {
+    const c = db.categories.find((x) => x.id === id);
+    db.products.filter((p) => p.category === c.name).forEach((p) => (p.category = name));
+    if (CATEGORY_KIND[c.name] && !CATEGORY_KIND[name]) CATEGORY_KIND[name] = CATEGORY_KIND[c.name];
+    Object.assign(c, { name, desc });
+    toast(`Saved “${name}”`);
+  } else {
+    const nid = "c" + (Math.max(...db.categories.map((c) => +c.id.slice(1)), 0) + 1);
+    db.categories.push({ id: nid, name, desc, pal: db.categories.length % 6 });
+    toast(`Added “${name}”`);
+  }
+  closeModal(); refreshBody();
+}
+
+/* =========================================================
+   Global search & notifications
+   ========================================================= */
+function globalSearch(q) {
+  const menu = $("#gsearchMenu"), dd = $("#gsearch");
+  if (!q.trim()) { dd.classList.remove("open"); return; }
+  const res = [
+    ...db.orders.filter((o) => matches(q, o.id, o.customer, ...o.items.map((i) => i.name))).map((o) => ({ act: "view-order", id: o.id, img: o.items[0].img, t: `${o.id} · ${o.customer}`, s: `${inr(orderTotal(o))} · ${o.status}`, k: "Order" })),
+    ...db.products.filter((p) => matches(q, p.name, p.sku, p.category)).map((p) => ({ act: "view-product", id: p.id, img: p.img, t: p.name, s: `${p.sku} · ${inr(p.price)}`, k: "Product" })),
+    ...db.customers.filter((c) => matches(q, c.name, c.email, c.phone, c.city)).map((c) => ({ act: "view-customer", id: c.id, av: initials(c.name), t: c.name, s: `${c.city} · ${c.orders} orders`, k: "Customer" })),
+    ...db.customOrders.filter((c) => matches(q, c.id, c.customer, c.request)).map((c) => ({ act: "view-custom", id: c.id, img: c.ref, t: `${c.id} · ${c.customer}`, s: c.product, k: "Custom" })),
+  ].slice(0, 8);
+  menu.innerHTML = res.length ? res.map((r) => `<button class="dd-item" data-act="${r.act}" data-id="${r.id}">${r.img ? `<img src="${r.img}" alt="">` : `<span class="avatar">${r.av}</span>`}<span><div class="t">${esc(r.t)}</div><div class="s">${esc(r.s)}</div></span><span class="search-kind">${r.k}</span></button>`).join("")
+    : `<div class="search-empty">No results for “${esc(q)}”</div>`;
+  dd.classList.add("open");
+}
+
+function renderNotifications() {
+  const items = [
+    ["bag", "t-wine", "New order SA-1005", "Neha Joshi · ₹1,299 · 2h ago", "view-order", "SA-1005"],
+    ["sparkle", "t-gold", "Custom request CO-206", "Wedding varmala preservation · 5h ago", "view-custom", "CO-206"],
+    ["alert", "t-warn", "Low stock: Lavender Bloom Keychain", "Only 1 unit left", "view-product", "p13"],
+    ["star", "t-ok", "New 4★ review awaiting approval", "Priya Sharma · Ocean Blue Coaster Set", "nav", "reviews"],
+  ];
+  $("#notifMenu").innerHTML = `<div class="dd-head">Notifications <small>${items.length} new</small></div>` +
+    items.map(([ic, t, title, sub, act, id]) => `<button class="dd-item" data-act="${act}" data-id="${id}"><span class="notif-ic ${t}">${icon(ic)}</span><span><div class="t">${title}</div><div class="s">${sub}</div></span></button>`).join("");
+}
+
+/* =========================================================
+   CSV export (local download of demo data only)
+   ========================================================= */
+function exportOrders() {
+  const rows = [["Order ID", "Date", "Customer", "Products", "Amount", "Payment", "Status"],
+    ...db.orders.map((o) => [o.id, o.date, o.customer, o.items.map((i) => `${i.name} x${i.qty}`).join("; "), orderTotal(o), o.payment, o.status])];
+  const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = "sanskriti-demo-orders.csv";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast("Exported demo orders as CSV", "download");
+}
+
+/* =========================================================
+   Event wiring
+   ========================================================= */
+const ACTIONS = {
+  nav: (id) => { closeModal(); closeDropdowns(); go(id); },
+  "open-nav": () => document.body.classList.add("nav-open"),
+  "close-nav": () => document.body.classList.remove("nav-open"),
+  "toggle-dd": (id) => { const dd = $("#" + id); const open = dd.classList.contains("open"); closeDropdowns(); dd.classList.toggle("open", !open); },
+  chart: (id) => { state.chart = id; $("#lineChart").innerHTML = lineChart(); bindLineChart(); $$(".seg-toggle button").forEach((b) => b.classList.toggle("on", b.dataset.id === id)); },
+
+  "close-modal": closeModal,
+  "confirm-yes": () => { const fn = confirmFn; confirmFn = null; closeModal(); fn?.(); },
+  "close-lightbox": () => $("#lightbox").classList.remove("open"),
+  lightbox: (_, el) => { const c = db.customOrders.find((x) => x.id === el.dataset.src); if (c) lightbox(c.ref, `${c.id} · reference from ${c.customer}`); },
+  "lightbox-url": (_, el) => { const p = product(el.dataset.src); if (p) lightbox(p.img, p.name); },
+  "lightbox-img": (_, el) => lightbox(el.src),
+
+  "view-product": (id) => { closeDropdowns(); viewProduct(id); },
+  "new-product": () => productForm(null),
+  "edit-product": (id) => productForm(id),
+  "save-product": (id) => saveProduct(id),
+  "delete-product": (id) => { const p = product(id); confirmBox("Delete product?", `“${esc(p.name)}” will be removed from the catalogue. Existing orders keep their details.`, () => { db.products = db.products.filter((x) => x.id !== id); refreshBody(); toast(`Deleted “${p.name}”`, "trash"); }); },
+
+  stock: (id, el) => { const p = product(id); p.stock = Math.max(0, p.stock + +el.dataset.d); refreshBody(); },
+  restock: (id) => { const p = product(id); p.stock += 20; refreshBody(); toast(`Restocked ${p.name} (+20)`); },
+
+  "view-order": (id) => { closeDropdowns(); viewOrder(id); },
+  "save-order": (id) => saveOrder(id),
+  "new-order": () => newOrderForm(),
+  "save-new-order": () => saveNewOrder(),
+  "delete-order": (id) => confirmBox("Delete order?", `Order <b>${esc(id)}</b> will be removed from the list.`, () => { db.orders = db.orders.filter((o) => o.id !== id); refreshBody(); toast(`Deleted order ${id}`, "trash"); }),
+  invoice: (id) => toast(`Invoice for ${id} generated (demo)`, "download"),
+  "export-orders": () => { closeDropdowns(); exportOrders(); },
+
+  "view-customer": (id) => { closeDropdowns(); viewCustomer(id); },
+  "new-customer": () => customerForm(null),
+  "edit-customer": (id) => customerForm(id),
+  "save-customer": (id) => saveCustomer(id),
+  "delete-customer": (id) => { const c = db.customers.find((x) => x.id === id); confirmBox("Delete customer?", `${esc(c.name)} will be removed. Their past orders stay in the orders list.`, () => { db.customers = db.customers.filter((x) => x.id !== id); refreshBody(); toast(`Deleted ${c.name}`, "trash"); }); },
+  "demo-msg": (id) => toast(`${id} is disabled in demo mode`, "mail"),
+
+  "view-custom": (id) => { closeDropdowns(); viewCustom(id); },
+  "save-custom": (id) => { const c = db.customOrders.find((x) => x.id === id); c.status = $("#coStatus").value; c.price = Math.max(0, +$("#coPrice").value || 0); closeModal(); refreshBody(); toast(`${c.id} set to ${c.status}`); },
+  "delete-custom": (id) => confirmBox("Delete custom request?", `Request <b>${esc(id)}</b> will be removed.`, () => { db.customOrders = db.customOrders.filter((x) => x.id !== id); refreshBody(); toast(`Deleted ${id}`, "trash"); }),
+
+  "review-status": (id, el) => { const r = db.reviews.find((x) => x.id === id); r.status = el.dataset.s; refreshBody(); toast(`Review ${r.status === "Published" ? "published" : "hidden"}`); },
+  "delete-review": (id) => confirmBox("Delete review?", "This review will be permanently removed.", () => { db.reviews = db.reviews.filter((x) => x.id !== id); refreshBody(); toast("Review deleted", "trash"); }),
+
+  "new-category": () => categoryForm(null),
+  "edit-category": (id) => categoryForm(id),
+  "save-category": (id) => saveCategory(id),
+  "open-category": (id) => { const c = db.categories.find((x) => x.id === id); state.f.products = { q: "", cat: c.name, status: "" }; go("products"); },
+  "delete-category": (id) => {
+    const c = db.categories.find((x) => x.id === id);
+    const n = db.products.filter((p) => p.category === c.name).length;
+    if (n) { toast(`Move or delete the ${n} product${n > 1 ? "s" : ""} in “${c.name}” first`, "alert"); return; }
+    confirmBox("Delete category?", `“${esc(c.name)}” will be removed.`, () => { db.categories = db.categories.filter((x) => x.id !== id); refreshBody(); toast(`Deleted “${c.name}”`, "trash"); });
+  },
+
+  "reset-demo": () => { closeDropdowns(); db = seedData(); go(state.section); toast("Demo data reset", "refresh"); },
+  "fake-logout": () => { closeDropdowns(); toast("Sign-out is disabled in the demo", "logout"); },
+};
+
+function closeDropdowns() { $$(".dd.open").forEach((d) => d.classList.remove("open")); }
+
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-act]");
+  if (!e.target.closest(".dd")) closeDropdowns();
+  if (!el) return;
+  const act = el.dataset.act;
+  if (!ACTIONS[act]) return;
+  e.preventDefault();
+  if (act === "toggle-dd") e.stopPropagation();
+  ACTIONS[act](el.dataset.id, el, e);
+});
+
+document.addEventListener("input", (e) => {
+  const key = e.target.dataset?.filter;
+  if (!key) return;
+  state.f[state.section][key] = e.target.value;
+  refreshBody();
+});
+document.addEventListener("change", (e) => {
+  const key = e.target.dataset?.filter;
+  if (!key || e.target.tagName !== "SELECT") return;
+  state.f[state.section][key] = e.target.value;
+  refreshBody();
+});
+
+$("#gsearchInput").addEventListener("input", (e) => globalSearch(e.target.value));
+$("#gsearchInput").addEventListener("focus", (e) => e.target.value && globalSearch(e.target.value));
+$("#gsearchInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { const first = $("#gsearchMenu .dd-item"); first?.click(); }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    if ($("#lightbox").classList.contains("open")) $("#lightbox").classList.remove("open");
+    else if (modalRoot.classList.contains("open")) closeModal();
+    else { closeDropdowns(); document.body.classList.remove("nav-open"); }
+  }
+  if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) { e.preventDefault(); $("#gsearchInput").focus(); }
+});
+window.addEventListener("hashchange", () => { const s = location.hash.slice(1); if (s && s !== state.section) go(s); });
+
+/* =========================================================
+   Boot
+   ========================================================= */
+hydrateIcons();
+renderNotifications();
+go(location.hash.slice(1) || "dashboard");
+})();
+</script>
+</body>
+</html>
